@@ -1,0 +1,6 @@
+section_name,teacher_name,teacher_email,student_id,student_name,student_email,year_level,school_year
+Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-001,Alice Sterling,alice@student.com,Grade 10,2026-2027
+Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-002,Bob Chen,bob@student.com,Grade 10,2026-2027
+Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-003,Carol Davis,,Grade 10,2026-2027
+Grade 11 - Einstein,Ms. Sarah Lopez,sarah@school.com,2026-004,David Kim,david@student.com,Grade 11,2026-2027
+Grade 11 - Einstein,Ms. Sarah Lopez,sarah@school.com,2026-005,Emma Wilson,,Grade 11,2026-2027
