@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(STUDENT)
+  accounts      Account[]
+  sessions      Session[]
+  student       Student?
+  teacher       Teacher?
+  activityLogs  ActivityLog[]
+}
+
+model Teacher {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  sections  Section[]
+}
+
+model Student {
+  id           String       @id @default(cuid())
+  studentId    String       @unique // e.g., 2022-0001
+  qrToken      String       @unique @default(uuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id])
+  sectionId    String?
+  section      Section?     @relation(fields: [sectionId], references: [id])
+  attendances  Attendance[]
+  appeals      Appeal[]
+}
+
+model Section {
+  id         String    @id @default(cuid())
+  name       String    @unique // e.g., STEM-A
+  teacherId  String?
+  teacher    Teacher?  @relation(fields: [teacherId], references: [id])
+  students   Student[]
+  schedules  Attendance[]
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  date      DateTime         @default(now())
+  status    AttendanceStatus
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  sectionId String
+  section   Section          @relation(fields: [sectionId], references: [id])
+  updatedAt DateTime         @updatedAt
+
+  @@unique([studentId, date, sectionId])
+}
+
+model AttendanceAudit {
+  id         String           @id @default(cuid())
+  attendanceId String
+  changedBy  String           // User ID
+  oldStatus  AttendanceStatus?
+  newStatus  AttendanceStatus
+  timestamp  DateTime         @default(now())
+  reason     String?
+}
+
+model Appeal {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id])
+  imageUrl    String    // Metadata storage
+  description String
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedBy  String?   // Teacher/Admin User ID who reviewed
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  type        String
+  description String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}

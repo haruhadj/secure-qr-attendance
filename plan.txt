@@ -1,0 +1,66 @@
+Role: Senior Full-stack Developer specializing in the T3 Stack philosophy (Next.js 15, TypeScript, Tailwind CSS, Prisma, PostgreSQL).
+
+Project: "Secure QR-Based Attendance Monitoring System with Hybrid Fallback."
+
+CRITICAL ARCHITECTURE RULE: Do NOT use Firebase or any NoSQL services. Use PostgreSQL for all data storage, including auth, metadata, and logs. Use Next.js Server Actions for backend logic.
+
+Tech Stack:
+
+Framework: Next.js (App Router).
+
+Database: PostgreSQL via Prisma ORM.
+
+Authentication: NextAuth.js (Auth.js) using the Prisma Adapter.
+
+QR Logic: qrcode.react (Generation) and html5-qrcode (Scanning).
+
+Core Feature: The 4-Way Resilience System:
+
+Digital QR: Student-side dashboard with dynamic QR generation.
+
+Physical ID: Support for permanent student qrToken strings.
+
+Manual Override: Teacher roster with toggle buttons.
+
+Digital Appeals: Student upload system (storing image metadata in Postgres).
+
+Implementation Steps:
+
+1. Data Modeling & Seeding (Postgres Only):
+
+Create a Prisma schema: User, Student, Teacher, Section, Attendance, and AttendanceAudit.
+
+AttendanceAudit must log: changedBy, oldStatus, newStatus, and timestamp.
+
+Write a seed.ts file creating 1 Admin, 1 Teacher, and 5 Dummy Students for Section "STEM-A" (IDs: 2022-0001 to 2022-0005).
+
+2. Teacher Roster & Error Prevention:
+
+Build the (teacher)/roster page.
+
+Undo Logic: Status changes must trigger a toast with a 5-second "Undo" option before the Server Action finalizes the Postgres write.
+
+Visual Cues: Use Shadcn/UI Badges (Green: Present, Red: Absent, Yellow: Late).
+
+Time-Lock: Disable manual edits for attendance older than 24 hours.
+
+3. Student & Admin Modules:
+
+(student)/dashboard: Display the unique QR code.
+
+(admin)/audit: A dedicated table view to read AttendanceAudit logs for accountability.
+
+Instructions:
+
+Ensure all components are strictly typed with TypeScript.
+
+Use lucide-react for iconography.
+
+Provide a high-quality UI designed for desktop and mobile-web browsers.
+
+### Quick Technical Tip:
+Since you aren't using Firebase for the "Appeals" images, you have two simple choices for the student proof photos:
+
+Simple: Store images in the /public/uploads folder (fine for local testing).
+
+Professional: Use Uploadthing or Cloudinary. They have great React hooks and don't require the complex setup that Firebase does.

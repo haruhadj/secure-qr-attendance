@@ -1,0 +1,8 @@
+{
+  "name": "Secure QR Attendance",
+  "description": "QR-based attendance monitoring system with hybrid fallback (digital/physical), teacher manual override, and student appeals.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
