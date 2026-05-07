@@ -118,7 +118,8 @@ export async function addStaff(name: string, email: string, role: UserRole) {
   }
 
   const bcrypt = require("bcryptjs");
-  const hashedPassword = bcrypt.hashSync("password123", 10);
+  const defaultPassword = role === UserRole.TEACHER ? "teacher123" : "password123";
+  const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
 
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({

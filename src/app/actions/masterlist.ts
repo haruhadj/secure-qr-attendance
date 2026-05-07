@@ -123,7 +123,7 @@ export async function addStudent(data: {
   }
 
   const bcrypt = require("bcryptjs");
-  const hashedPassword = bcrypt.hashSync("password123", 10);
+  const hashedPassword = bcrypt.hashSync(data.studentId, 10);
 
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
