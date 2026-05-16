@@ -14,7 +14,6 @@ import { Badge } from "@/src/components/ui/badge";
 import { ShieldCheck, History, ArrowRight } from "lucide-react";
 import DatePicker from "@/src/components/DatePicker";
 import { getUTCMidnight, parseUTCDate, formatDateTime } from "@/src/lib/date";
-import { endOfDay } from "date-fns";
 
 export default async function AdminAudit({
   searchParams,
@@ -29,7 +28,8 @@ export default async function AdminAudit({
   }
 
   const selectedDate = dateStr ? parseUTCDate(dateStr) : getUTCMidnight();
-  const dateEnd = endOfDay(selectedDate);
+  // Use UTC end-of-day to stay consistent with how dates are stored
+  const dateEnd = new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000 - 1);
 
   const audits = await prisma.attendanceAudit.findMany({
     where: {
@@ -47,6 +47,14 @@ export default async function AdminAudit({
     where: { id: { in: userIds } }
   });
   const userMap = users.reduce((acc, u) => ({ ...acc, [u.id]: u.name }), {} as any);
+
+  // Fetch attendance records to get student info
+  const attendanceIds = Array.from(new Set(audits.map(a => a.attendanceId)));
+  const attendances = await prisma.attendance.findMany({
+    where: { id: { in: attendanceIds } },
+    include: { student: { include: { user: true } }, section: true },
+  });
+  const attendanceMap = attendances.reduce((acc, a) => ({ ...acc, [a.id]: a }), {} as any);
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -79,24 +87,37 @@ export default async function AdminAudit({
               <TableHeader>
                 <TableRow>
                   <TableHead>Timestamp</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Section</TableHead>
                   <TableHead>Changed By</TableHead>
-                  <TableHead>Sequence</TableHead>
+                  <TableHead>Status Change</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {audits.map((audit) => (
+                {audits.map((audit) => {
+                  const attendance = attendanceMap[audit.attendanceId];
+                  return (
                   <TableRow key={audit.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
+                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                       {formatDateTime(audit.timestamp)}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-sm">
+                      {attendance?.student?.user?.name || <span className="text-muted-foreground/40 italic">Unknown</span>}
+                      {attendance?.student?.studentId && (
+                        <div className="text-[10px] text-muted-foreground font-mono">{attendance.student.studentId}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {attendance?.section?.name || <span className="text-muted-foreground/40 italic">—</span>}
+                    </TableCell>
+                    <TableCell className="font-medium text-sm">
                       {userMap[audit.changedBy] || "System"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {audit.oldStatus ? (
-                          <Badge variant="outline" className="opacity-50 strike-through text-[10px]">
+                          <Badge variant="outline" className="opacity-50 text-[10px]">
                             {audit.oldStatus}
                           </Badge>
                         ) : (
@@ -107,9 +128,9 @@ export default async function AdminAudit({
                         <ArrowRight className="w-3 h-3 text-muted-foreground/30" />
                         <Badge 
                           className={
-                            audit.newStatus === 'PRESENT' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                            audit.newStatus === 'ABSENT' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                            'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                            audit.newStatus === 'PRESENT' ? 'bg-green-500/10 text-green-500 border-green-500/20 text-[10px]' :
+                            audit.newStatus === 'ABSENT' ? 'bg-red-500/10 text-red-500 border-red-500/20 text-[10px]' :
+                            'bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]'
                           }
                         >
                           {audit.newStatus}
@@ -120,7 +141,8 @@ export default async function AdminAudit({
                       {audit.reason || "Manual Override"}
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
             {audits.length === 0 && (
