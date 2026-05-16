@@ -80,9 +80,7 @@ export default function Navbar({ role }: { role: string }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden md:block">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
             <Button 
               variant="ghost" 
               size="sm" 
@@ -121,9 +119,6 @@ export default function Navbar({ role }: { role: string }) {
             <LogOut className="w-5 h-5" />
             <span className="text-[10px] font-medium leading-none">Logout</span>
           </button>
-          <div className="flex items-center justify-center flex-1">
-            <ThemeToggle />
-          </div>
         </div>
       </div>
     </>
