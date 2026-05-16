@@ -2,12 +2,12 @@ import { startOfDay } from "date-fns";
 
 export function formatTime(date: Date | string): string {
   const d = new Date(date);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return d.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Manila" });
 }
 
 export function formatDate(date: Date | string): string {
   const d = new Date(date);
-  return d.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "numeric" });
+  return d.toLocaleDateString("en-PH", { month: "2-digit", day: "2-digit", year: "numeric", timeZone: "Asia/Manila" });
 }
 
 export function formatDateTime(date: Date | string): string {
