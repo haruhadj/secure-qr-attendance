@@ -1,15 +1,17 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@yourdomain.com";
-const APP_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || "http://localhost:3000";
-
 export async function sendPasswordResetEmail(
   toEmail: string,
   userName: string,
   token: string
 ) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("Email service is not configured. Please contact your administrator.");
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@yourdomain.com";
+  const APP_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || "http://localhost:3000";
   const resetUrl = `${APP_URL}/reset-password/${token}`;
 
   await resend.emails.send({

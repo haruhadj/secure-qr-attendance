@@ -52,9 +52,7 @@ export async function updateAttendance(
     throw new Error(`Edits are locked for attendance older than ${timeStr}.`);
   }
 
-  let result;
-  try {
-  result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const attendance = await tx.attendance.upsert({
       where: {
         studentId_date_sectionId: {
@@ -87,10 +85,6 @@ export async function updateAttendance(
 
     return attendance;
   });
-  } catch (err) {
-    console.error("[updateAttendance] Transaction failed:", err);
-    throw err;
-  }
 
   await logActivity("ATTENDANCE_EDIT", `Updated attendance status for student ${studentId}`, {
     studentId,
