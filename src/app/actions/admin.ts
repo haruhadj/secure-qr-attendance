@@ -6,6 +6,7 @@ import { authOptions } from "@/src/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/src/lib/audit";
+import { getUTCMidnight } from "@/src/lib/date";
 
 // Authorization helper
 async function requireAdmin() {
@@ -24,12 +25,12 @@ export async function getAdminDashboardStats() {
   const totalSections = await prisma.section.count();
 
   // Today's attendance rate
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getUTCMidnight();
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
   const totalPresentToday = await prisma.attendance.count({
     where: {
-      date: today,
+      date: { gte: today, lt: tomorrow },
       status: "PRESENT",
     },
   });

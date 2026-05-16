@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { AttendanceStatus } from "@prisma/client";
+import { formatTime } from "@/src/lib/date";
 import { updateAttendance } from "@/src/app/actions/attendance";
 import { toast } from "sonner";
 import { Circle, CheckCircle2, XCircle, Clock } from "lucide-react";
@@ -123,7 +124,7 @@ export default function RosterTable({
             </TableCell>
             <TableCell className="text-xs text-muted-foreground">
               {student.attendanceTime
-                ? new Date(student.attendanceTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                ? formatTime(student.attendanceTime)
                 : <span className="text-muted-foreground/30">—</span>}
             </TableCell>
             <TableCell className="text-right">

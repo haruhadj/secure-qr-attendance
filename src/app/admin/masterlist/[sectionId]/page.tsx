@@ -25,7 +25,7 @@ import { Users, GraduationCap, ChevronLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
-import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
+import { getUTCMidnight, parseUTCDate, formatTime, formatDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 
 export default async function SectionMasterlist({ 
@@ -100,7 +100,7 @@ export default async function SectionMasterlist({
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  Attendance for {selectedDate.toLocaleDateString()}
+                  Attendance for {formatDate(selectedDate)}
                 </CardTitle>
                 <CardDescription>
                   Roster and status for the selected date
@@ -153,7 +153,7 @@ export default async function SectionMasterlist({
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {attendance
-                          ? new Date(attendance.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          ? formatTime(attendance.updatedAt)
                           : <span className="text-muted-foreground/30">—</span>}
                       </TableCell>
                       <TableCell>

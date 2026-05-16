@@ -8,6 +8,7 @@ import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
 import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit } from "lucide-react";
+import { formatDate } from "@/src/lib/date";
 import { QRCodeSVG } from "qrcode.react";
 
 interface Section {
@@ -609,7 +610,7 @@ export function EditAttendanceModal({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Edit Attendance</CardTitle>
-              <CardDescription>{studentName} — {selectedDate.toLocaleDateString()}</CardDescription>
+              <CardDescription>{studentName} — {formatDate(selectedDate)}</CardDescription>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="h-8 w-8">
               <X className="w-4 h-4" />
@@ -689,7 +690,7 @@ export function DeleteAttendanceButton({
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm(`Clear attendance record for "${studentName}" on ${selectedDate.toLocaleDateString()}?`)) return;
+    if (!confirm(`Clear attendance record for "${studentName}" on ${formatDate(selectedDate)}?`)) return;
     setLoading(true);
     try {
       const result = await deleteAttendance(studentDbId, sectionId, selectedDate);

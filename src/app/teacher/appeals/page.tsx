@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Badge } from "@/src/components/ui/badge";
 import AppealReviewActions from "@/src/components/AppealReviewActions";
 import { FileWarning, Clock, CheckCircle, XCircle, Inbox } from "lucide-react";
+import { formatDateTime, formatDate } from "@/src/lib/date";
 
 export default async function TeacherAppeals() {
   const session = await getServerSession(authOptions);
@@ -129,11 +130,7 @@ export default async function TeacherAppeals() {
                         {appeal.description}
                       </p>
                       <p className="text-[10px] font-mono text-muted-foreground/50">
-                        Submitted: {new Date(appeal.createdAt).toLocaleDateString()}{" "}
-                        {new Date(appeal.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        Submitted: {formatDateTime(appeal.createdAt)}
                       </p>
                     </div>
                     <AppealReviewActions appealId={appeal.id} imageUrl={appeal.imageUrl} />
@@ -183,7 +180,7 @@ export default async function TeacherAppeals() {
                         <p className="text-[10px] font-mono text-muted-foreground/50">
                           Reviewed:{" "}
                           {appeal.reviewedAt
-                            ? new Date(appeal.reviewedAt).toLocaleDateString()
+                            ? formatDateTime(appeal.reviewedAt)
                             : "—"}
                         </p>
                       </div>

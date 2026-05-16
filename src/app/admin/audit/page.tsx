@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/src/components/ui/badge";
 import { ShieldCheck, History, ArrowRight } from "lucide-react";
 import DatePicker from "@/src/components/DatePicker";
-import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
+import { getUTCMidnight, parseUTCDate, formatDateTime } from "@/src/lib/date";
 import { endOfDay } from "date-fns";
 
 export default async function AdminAudit({
@@ -88,7 +88,7 @@ export default async function AdminAudit({
                 {audits.map((audit) => (
                   <TableRow key={audit.id}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
-                      {new Date(audit.timestamp).toLocaleString()}
+                      {formatDateTime(audit.timestamp)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {userMap[audit.changedBy] || "System"}

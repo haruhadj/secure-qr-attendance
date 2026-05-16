@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { scanQrAttendance } from "@/src/app/actions/attendance";
+import { formatTime } from "@/src/lib/date";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
@@ -299,7 +300,7 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
                         {scan.message}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
-                        {scan.timestamp.toLocaleTimeString()}
+                        {formatTime(scan.timestamp)}
                       </p>
                     </div>
                   </div>

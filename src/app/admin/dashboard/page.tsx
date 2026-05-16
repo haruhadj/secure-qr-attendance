@@ -13,6 +13,7 @@ import { Badge } from "@/src/components/ui/badge";
 import SystemSettingsForm from "@/src/components/SystemSettingsForm";
 import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search } from "lucide-react";
 import DemoAccountsCard from "./DemoAccountsCard";
+import { AutoRefresh } from "@/src/components/AutoRefresh";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -26,6 +27,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
+      <AutoRefresh interval={30000} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
@@ -222,13 +224,8 @@ function getActivityColor(type: string) {
 }
 
 function formatRelativeTime(date: Date) {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return "just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const d = new Date(date);
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  const dateStr = d.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "numeric" });
+  return `${time}  ${dateStr}`;
 }

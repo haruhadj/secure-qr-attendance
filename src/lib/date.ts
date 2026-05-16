@@ -1,5 +1,19 @@
 import { startOfDay } from "date-fns";
 
+export function formatTime(date: Date | string): string {
+  const d = new Date(date);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+export function formatDate(date: Date | string): string {
+  const d = new Date(date);
+  return d.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "numeric" });
+}
+
+export function formatDateTime(date: Date | string): string {
+  return `${formatTime(date)} · ${formatDate(date)}`;
+}
+
 /**
  * Returns a Date object representing the midnight UTC of the given date.
  * This ensures consistency across different server/client timezones.

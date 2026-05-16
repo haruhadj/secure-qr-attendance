@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import AppealForm from "@/src/components/AppealForm";
 import { Badge } from "@/src/components/ui/badge";
 import { FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import { formatDateTime } from "@/src/lib/date";
 
 export default async function StudentAppeals() {
   const session = await getServerSession(authOptions);
@@ -77,7 +78,7 @@ export default async function StudentAppeals() {
                         {appeal.description}
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
-                        SUBMITTED: {new Date(appeal.createdAt).toLocaleDateString()}
+                        SUBMITTED: {formatDateTime(appeal.createdAt)}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
