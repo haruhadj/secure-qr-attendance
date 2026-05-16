@@ -68,13 +68,7 @@ export default function ChangePasswordForm() {
                 required
                 className="pr-9"
               />
-              <button
-                type="button"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowCurrent((v) => !v)}
-              >
-                {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+             
             </div>
           </div>
 
