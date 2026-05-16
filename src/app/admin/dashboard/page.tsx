@@ -228,7 +228,7 @@ function getActivityColor(type: string) {
 
 function formatRelativeTime(date: Date) {
   const d = new Date(date);
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-  const dateStr = d.toLocaleDateString([], { month: "2-digit", day: "2-digit", year: "numeric" });
+  const time = d.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Manila" });
+  const dateStr = d.toLocaleDateString("en-PH", { month: "2-digit", day: "2-digit", year: "numeric", timeZone: "Asia/Manila" });
   return `${time}  ${dateStr}`;
 }
