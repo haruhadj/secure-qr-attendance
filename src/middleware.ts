@@ -7,23 +7,24 @@ export default withAuth(
     const role = req.nextauth.token?.role as string | undefined;
 
     // Already authenticated users hitting the login page → redirect to their dashboard
+    // Use req.nextUrl.origin to build clean URLs without any callbackUrl param
     if (pathname === "/") {
-      if (role === "ADMIN") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      if (role === "TEACHER") return NextResponse.redirect(new URL("/teacher/roster", req.url));
-      if (role === "STUDENT") return NextResponse.redirect(new URL("/student/dashboard", req.url));
+      if (role === "ADMIN") return NextResponse.redirect(new URL("/admin/dashboard", req.nextUrl.origin));
+      if (role === "TEACHER") return NextResponse.redirect(new URL("/teacher/roster", req.nextUrl.origin));
+      if (role === "STUDENT") return NextResponse.redirect(new URL("/student/dashboard", req.nextUrl.origin));
     }
 
-    // Role-based route enforcement
+    // Role-based route enforcement — redirect unauthorized users to login
     if (pathname.startsWith("/admin") && role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
 
     if (pathname.startsWith("/teacher") && role !== "TEACHER") {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
 
     if (pathname.startsWith("/student") && role !== "STUDENT") {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
 
     return NextResponse.next();

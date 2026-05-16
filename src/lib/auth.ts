@@ -114,5 +114,12 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // After sign-in, always go to baseUrl (/) and let the middleware
+      // redirect to the correct role-based dashboard. This prevents
+      // callbackUrl loops when NextAuth appends ?callbackUrl=... to the
+      // sign-in page URL.
+      return baseUrl;
+    },
   },
 };
