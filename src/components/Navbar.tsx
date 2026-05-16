@@ -80,11 +80,13 @@ export default function Navbar({ role }: { role: string }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+              className="hidden md:flex text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
               onClick={() => signOut({ callbackUrl: "/" })}
             >
               <LogOut className="w-4 h-4 mr-2" />

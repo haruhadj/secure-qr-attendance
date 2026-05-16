@@ -28,7 +28,9 @@ export default async function RootLayout({
         <Providers>
           <ProgressBar />
           {session?.user && <Navbar role={(session.user as any).role} />}
-          {children}
+          <div className={session?.user ? "pb-20 md:pb-0" : ""}>
+            {children}
+          </div>
         </Providers>
         <Toaster position="top-right" expand={false} richColors />
       </body>
