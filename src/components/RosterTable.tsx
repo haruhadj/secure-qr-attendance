@@ -73,9 +73,16 @@ export default function RosterTable({
     // 4. Set 5s timeout to commit to DB
     pendingTimeouts.current[studentId] = setTimeout(async () => {
       try {
-        await updateAttendance(studentId, sectionId, newStatus, oldStatus || undefined, selectedDateISO ? new Date(selectedDateISO) : undefined);
+        const result = await updateAttendance(studentId, sectionId, newStatus, oldStatus || undefined, selectedDateISO ? new Date(selectedDateISO) : undefined);
         delete pendingTimeouts.current[studentId];
-        toast.success(`${students[studentIndex].name} updated successfully.`, { id: toastId });
+        if (result?.error) {
+          toast.error(result.error, { id: toastId });
+          const revertedStudents = [...students];
+          revertedStudents[studentIndex].status = oldStatus;
+          setStudents(revertedStudents);
+        } else {
+          toast.success(`${students[studentIndex].name} updated successfully.`, { id: toastId });
+        }
       } catch (error: any) {
         toast.error(error.message || "Failed to sync change.", { id: toastId });
         // Revert UI on error

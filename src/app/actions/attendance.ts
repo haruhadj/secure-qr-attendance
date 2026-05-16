@@ -18,7 +18,7 @@ export async function updateAttendance(
 ) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role === UserRole.STUDENT) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
   const targetDate = getUTCMidnight(customDate || new Date());
@@ -49,7 +49,7 @@ export async function updateAttendance(
     }
     if (!timeStr) timeStr = "0 hours"; // Should not happen if lockHours > 0
 
-    throw new Error(`Edits are locked for attendance older than ${timeStr}.`);
+    return { error: `Edits are locked for attendance older than ${timeStr}.` };
   }
 
   const result = await prisma.$transaction(async (tx) => {
@@ -97,7 +97,7 @@ export async function updateAttendance(
   revalidatePath("/teacher/roster");
   revalidatePath("/admin/audit");
   revalidatePath("/student/dashboard");
-  return result;
+  return { success: true, data: result };
 }
 
 // ... (skipping getAuditLogs)
