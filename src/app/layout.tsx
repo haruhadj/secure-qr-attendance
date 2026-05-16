@@ -4,6 +4,7 @@ import "@/src/index.css";
 import { Toaster } from "@/src/components/ui/sonner";
 import Providers from "@/src/components/Providers";
 import Navbar from "@/src/components/Navbar";
+import ProgressBar from "@/src/components/ProgressBar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 
@@ -25,6 +26,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
+          <ProgressBar />
           {session?.user && <Navbar role={(session.user as any).role} />}
           {children}
         </Providers>
