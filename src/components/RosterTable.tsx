@@ -15,6 +15,7 @@ interface RosterStudent {
   name: string;
   status: AttendanceStatus | null;
   sectionId: string;
+  attendanceTime?: Date | null;
 }
 
 export default function RosterTable({ 
@@ -104,6 +105,7 @@ export default function RosterTable({
           <TableHead className="w-[120px]">Student ID</TableHead>
           <TableHead>Account Name</TableHead>
           <TableHead>Current Status</TableHead>
+          <TableHead>Time</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -118,6 +120,11 @@ export default function RosterTable({
             </TableCell>
             <TableCell>
               {getStatusBadge(student.status)}
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground">
+              {student.attendanceTime
+                ? new Date(student.attendanceTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : <span className="text-muted-foreground/30">—</span>}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">

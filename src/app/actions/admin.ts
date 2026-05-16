@@ -145,6 +145,30 @@ export async function addStaff(name: string, email: string, role: UserRole) {
   return { success: true, message: `${name} added as ${role}.` };
 }
 
+export async function resetStaffPassword(userId: string) {
+  await requireAdmin();
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { success: false, message: "User not found." };
+
+  const bcrypt = require("bcryptjs");
+  const defaultPassword = user.role === UserRole.TEACHER ? "teacher123" : "password123";
+  const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
+
+  await logActivity("STUDENT_PASSWORD_RESET", `Admin reset password for ${user.name} (${user.role})`, {
+    userId,
+    role: user.role,
+  });
+
+  revalidatePath("/admin/staff");
+  return { success: true, message: `Password reset to default for ${user.name}.` };
+}
+
 export async function removeStaff(userId: string) {
   const session = await requireAdmin();
 

@@ -15,6 +15,7 @@ import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
+import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 
 export default async function TeacherRoster({
   searchParams,
@@ -103,12 +104,14 @@ export default async function TeacherRoster({
                 studentId: s.studentId,
                 name: s.user.name || "Unknown",
                 status: s.attendances[0]?.status || null,
-                sectionId: section.id
+                sectionId: section.id,
+                attendanceTime: s.attendances[0]?.updatedAt || null
               }))} 
               selectedDate={selectedDate}
             />
           </CardContent>
         </Card>
+        <ChangePasswordForm />
       </div>
     </div>
   );

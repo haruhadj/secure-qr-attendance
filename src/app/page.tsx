@@ -8,12 +8,13 @@
 import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
+import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Label } from "@/src/components/ui/label";
-import { QrCode, ShieldCheck, UserCircle } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Home() {
@@ -125,7 +126,12 @@ export default function Home() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className={passwordError ? "text-destructive" : ""}>Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className={passwordError ? "text-destructive" : ""}>Password</Label>
+                    <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">
+                      Forgot password?
+                    </Link>
+                  </div>
                   <Input
                     id="password"
                     type="password"
@@ -149,55 +155,6 @@ export default function Home() {
           </Card>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 mt-8 pb-16">
-          <div className="p-4 bg-card rounded-xl border border-border space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-              <UserCircle className="w-4 h-4" />
-              Demo Accounts
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <button 
-                onClick={() => { 
-                  setEmail("admin@school.com"); 
-                  setPassword("password123"); 
-                  setHasError(false);
-                  setEmailError(false);
-                  setPasswordError(false);
-                }}
-                className="p-2 bg-muted rounded hover:bg-accent text-left transition-colors text-muted-foreground"
-                type="button"
-              >
-                <strong className="text-foreground">Admin:</strong> admin@school.com
-              </button>
-              <button 
-                onClick={() => { 
-                  setEmail("teacher@school.com"); 
-                  setPassword("password123"); 
-                  setHasError(false);
-                  setEmailError(false);
-                  setPasswordError(false);
-                }}
-                className="p-2 bg-muted rounded hover:bg-accent text-left transition-colors text-muted-foreground"
-                type="button"
-              >
-                <strong className="text-foreground">Teacher:</strong> teacher@school.com
-              </button>
-              <button 
-                onClick={() => { 
-                  setEmail("john@student.com"); 
-                  setPassword("password123"); 
-                  setHasError(false);
-                  setEmailError(false);
-                  setPasswordError(false);
-                }}
-                className="p-2 bg-muted rounded hover:bg-accent text-left transition-colors text-muted-foreground"
-                type="button"
-              >
-                <strong className="text-foreground">Student:</strong> john@student.com
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );

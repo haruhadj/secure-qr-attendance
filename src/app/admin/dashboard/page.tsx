@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { Badge } from "@/src/components/ui/badge";
 import SystemSettingsForm from "@/src/components/SystemSettingsForm";
 import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search } from "lucide-react";
+import DemoAccountsCard from "./DemoAccountsCard";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -184,6 +185,8 @@ export default async function AdminDashboard() {
             </Card>
           </div>
         </div>
+
+        <DemoAccountsCard />
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import { QrCode, IdCard, Image as ImageIcon, History, CheckCircle2, XCircle, Clo
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import { format, isToday, isYesterday } from "date-fns";
 import AttendanceCalendar from "@/src/components/AttendanceCalendar";
+import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 
 export default async function StudentDashboard() {
   const session = await getServerSession(authOptions);
@@ -293,6 +294,7 @@ export default async function StudentDashboard() {
             </Card>
           </div>
         </div>
+        <ChangePasswordForm />
       </div>
     </div>
   );

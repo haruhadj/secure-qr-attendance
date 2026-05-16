@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
-import { AddStaffForm, RemoveStaffButton } from "@/src/components/StaffForms";
+import { AddStaffForm, RemoveStaffButton, ResetStaffPasswordButton } from "@/src/components/StaffForms";
 import { ShieldCheck, Users, Briefcase } from "lucide-react";
 
 export default async function AdminStaffManagement() {
@@ -112,11 +112,18 @@ export default async function AdminStaffManagement() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <RemoveStaffButton
-                        userId={user.id}
-                        userName={user.name || "Unknown"}
-                        currentUserId={currentUserId}
-                      />
+                      <div className="flex items-center justify-end gap-1">
+                        <ResetStaffPasswordButton
+                          userId={user.id}
+                          userName={user.name || "Unknown"}
+                          currentUserId={currentUserId}
+                        />
+                        <RemoveStaffButton
+                          userId={user.id}
+                          userName={user.name || "Unknown"}
+                          currentUserId={currentUserId}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

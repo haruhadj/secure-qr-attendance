@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { addStaff, removeStaff } from "@/src/app/actions/admin";
+import { addStaff, removeStaff, resetStaffPassword } from "@/src/app/actions/admin";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
-import { UserPlus, Trash2, Loader2, X } from "lucide-react";
+import { UserPlus, Trash2, Loader2, X, KeyRound } from "lucide-react";
 import { UserRole } from "@prisma/client";
 
 export function AddStaffForm() {
@@ -144,6 +144,47 @@ export function RemoveStaffButton({
       disabled={loading}
     >
       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+    </Button>
+  );
+}
+
+export function ResetStaffPasswordButton({
+  userId,
+  userName,
+  currentUserId,
+}: {
+  userId: string;
+  userName: string;
+  currentUserId: string;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  const handleReset = async () => {
+    if (!confirm(`Reset password for "${userName}" to the default? They will need to change it on next login.`)) return;
+    setLoading(true);
+    try {
+      const result = await resetStaffPassword(userId);
+      if (result.success) toast.success(result.message);
+      else toast.error(result.message);
+    } catch {
+      toast.error("Failed to reset password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (userId === currentUserId) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 text-amber-400 hover:text-amber-500 hover:bg-amber-500/10"
+      onClick={handleReset}
+      disabled={loading}
+      title="Reset password to default"
+    >
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyRound className="w-3.5 h-3.5" />}
     </Button>
   );
 }

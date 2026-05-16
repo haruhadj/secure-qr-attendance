@@ -9,12 +9,16 @@ import { authOptions } from "./auth";
 
 export type ActivityType = 
   | "ATTENDANCE_EDIT" 
-  | "ATTENDANCE_SCAN" 
+  | "ATTENDANCE_SCAN"
+  | "ATTENDANCE_ADMIN_EDIT"
+  | "ATTENDANCE_DELETE"
   | "STAFF_ADD" 
   | "STAFF_REMOVE" 
   | "STUDENT_ADD" 
   | "STUDENT_REMOVE" 
-  | "STUDENT_UPDATE" 
+  | "STUDENT_UPDATE"
+  | "STUDENT_PASSWORD_RESET"
+  | "STUDENT_QR_REGEN"
   | "SECTION_ADD" 
   | "SECTION_REMOVE" 
   | "SECTION_UPDATE" 

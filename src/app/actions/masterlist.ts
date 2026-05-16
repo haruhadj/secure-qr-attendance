@@ -311,6 +311,146 @@ export async function updateStudent(
   return { success: true, message: "Student updated successfully." };
 }
 
+export async function adminUpdateAttendance(
+  studentId: string,
+  sectionId: string,
+  date: Date,
+  status: "PRESENT" | "ABSENT" | "LATE",
+  timeString?: string
+) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+
+  const targetDate = getUTCMidnight(date);
+
+  let updatedAt: Date | undefined;
+  if (timeString) {
+    const [hours, minutes] = timeString.split(":").map(Number);
+    updatedAt = new Date(targetDate);
+    updatedAt.setUTCHours(hours, minutes, 0, 0);
+  }
+
+  const attendance = await prisma.attendance.upsert({
+    where: {
+      studentId_date_sectionId: { studentId, date: targetDate, sectionId },
+    },
+    update: {
+      status,
+      ...(updatedAt ? { updatedAt } : {}),
+    },
+    create: {
+      studentId,
+      date: targetDate,
+      sectionId,
+      status,
+      ...(updatedAt ? { updatedAt } : {}),
+    },
+  });
+
+  await logActivity("ATTENDANCE_ADMIN_EDIT", `Admin updated attendance for student ${studentId}`, {
+    studentId,
+    sectionId,
+    status,
+    date: targetDate,
+  });
+
+  revalidatePath("/admin/masterlist");
+  revalidatePath("/student/dashboard");
+  return { success: true, message: "Attendance updated.", attendance };
+}
+
+export async function deleteAttendance(studentId: string, sectionId: string, date: Date) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+
+  const targetDate = getUTCMidnight(date);
+
+  const existing = await prisma.attendance.findUnique({
+    where: { studentId_date_sectionId: { studentId, date: targetDate, sectionId } },
+  });
+
+  if (!existing) {
+    return { success: false, message: "No attendance record found." };
+  }
+
+  await prisma.attendance.delete({
+    where: { studentId_date_sectionId: { studentId, date: targetDate, sectionId } },
+  });
+
+  await logActivity("ATTENDANCE_DELETE", `Admin deleted attendance for student ${studentId}`, {
+    studentId,
+    sectionId,
+    date: targetDate,
+  });
+
+  revalidatePath("/admin/masterlist");
+  revalidatePath("/student/dashboard");
+  return { success: true, message: "Attendance record cleared." };
+}
+
+export async function resetStudentPassword(studentDbId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+
+  const student = await prisma.student.findUnique({
+    where: { id: studentDbId },
+    include: { user: true },
+  });
+
+  if (!student) return { success: false, message: "Student not found." };
+
+  const bcrypt = require("bcryptjs");
+  const hashedPassword = bcrypt.hashSync(student.studentId, 10);
+
+  await prisma.user.update({
+    where: { id: student.userId },
+    data: { password: hashedPassword },
+  });
+
+  await logActivity("STUDENT_PASSWORD_RESET", `Admin reset password for student ${student.user.name}`, {
+    studentDbId,
+    studentId: student.studentId,
+  });
+
+  revalidatePath("/admin/masterlist");
+  return { success: true, message: `Password reset to Student ID (${student.studentId}).` };
+}
+
+export async function regenerateQrToken(studentDbId: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+
+  const student = await prisma.student.findUnique({
+    where: { id: studentDbId },
+    include: { user: true },
+  });
+
+  if (!student) return { success: false, message: "Student not found." };
+
+  const newToken = crypto.randomUUID();
+
+  await prisma.student.update({
+    where: { id: studentDbId },
+    data: { qrToken: newToken },
+  });
+
+  await logActivity("STUDENT_QR_REGEN", `Admin regenerated QR token for student ${student.user.name}`, {
+    studentDbId,
+    studentId: student.studentId,
+  });
+
+  revalidatePath("/admin/masterlist");
+  return { success: true, message: `QR token regenerated for ${student.user.name}.` };
+}
+
 export interface ImportResult {
   success: boolean;
   message: string;

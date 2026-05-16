@@ -18,6 +18,8 @@ import {
   RemoveStudentButton,
   EditStudentModal,
   ViewQrModal,
+  EditAttendanceModal,
+  DeleteAttendanceButton,
 } from "@/src/components/MasterlistForms";
 import { Users, GraduationCap, ChevronLeft, Calendar } from "lucide-react";
 import Link from "next/link";
@@ -114,6 +116,7 @@ export default async function SectionMasterlist({
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
+                  <TableHead className="w-[80px]">Time</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -148,8 +151,28 @@ export default async function SectionMasterlist({
                           <span className="text-xs text-muted-foreground/30">—</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {attendance
+                          ? new Date(attendance.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : <span className="text-muted-foreground/30">—</span>}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
+                          <EditAttendanceModal
+                            studentDbId={student.id}
+                            studentName={student.user.name || "Unknown"}
+                            sectionId={sectionId}
+                            selectedDate={selectedDate}
+                            currentStatus={attendance?.status || null}
+                            currentTime={attendance?.updatedAt || null}
+                          />
+                          <DeleteAttendanceButton
+                            studentDbId={student.id}
+                            studentName={student.user.name || "Unknown"}
+                            sectionId={sectionId}
+                            selectedDate={selectedDate}
+                            hasAttendance={!!attendance}
+                          />
                           <ViewQrModal
                             studentName={student.user.name || "Unknown"}
                             qrToken={student.qrToken}
@@ -169,7 +192,7 @@ export default async function SectionMasterlist({
                 })}
                 {students.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground italic">
+                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
                       No students in this section yet.
                     </TableCell>
                   </TableRow>
