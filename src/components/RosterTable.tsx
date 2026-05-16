@@ -16,15 +16,15 @@ interface RosterStudent {
   name: string;
   status: AttendanceStatus | null;
   sectionId: string;
-  attendanceTime?: Date | null;
+  attendanceTime?: string | null;
 }
 
 export default function RosterTable({ 
   students: initialStudents, 
-  selectedDate 
+  selectedDateISO 
 }: { 
   students: RosterStudent[], 
-  selectedDate?: Date 
+  selectedDateISO?: string 
 }) {
   const [students, setStudents] = useState(initialStudents);
 
@@ -73,7 +73,7 @@ export default function RosterTable({
     // 4. Set 5s timeout to commit to DB
     pendingTimeouts.current[studentId] = setTimeout(async () => {
       try {
-        await updateAttendance(studentId, sectionId, newStatus, oldStatus || undefined, selectedDate);
+        await updateAttendance(studentId, sectionId, newStatus, oldStatus || undefined, selectedDateISO ? new Date(selectedDateISO) : undefined);
         delete pendingTimeouts.current[studentId];
         toast.success(`${students[studentIndex].name} updated successfully.`, { id: toastId });
       } catch (error: any) {

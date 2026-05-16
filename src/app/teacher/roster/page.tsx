@@ -111,9 +111,9 @@ export default async function TeacherRoster({
                 name: s.user.name || "Unknown",
                 status: s.attendances[0]?.status || null,
                 sectionId: section.id,
-                attendanceTime: s.attendances[0]?.updatedAt || null
+                attendanceTime: s.attendances[0]?.updatedAt?.toISOString() || null
               }))} 
-              selectedDate={selectedDate}
+              selectedDateISO={selectedDate.toISOString()}
             />
           </CardContent>
         </Card>
