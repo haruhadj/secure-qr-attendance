@@ -27,6 +27,7 @@ import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate, formatTime, formatDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
+import ExportCsvButton from "@/src/components/ExportCsvButton";
 
 export default async function SectionMasterlist({ 
   params,
@@ -106,6 +107,7 @@ export default async function SectionMasterlist({
                   Roster and status for the selected date
                 </CardDescription>
               </div>
+              <ExportCsvButton sectionId={sectionId} sectionName={section.name} />
             </div>
           </CardHeader>
           <CardContent>

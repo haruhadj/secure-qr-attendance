@@ -69,7 +69,11 @@ export default function Home() {
 
       if (result?.error) {
         setHasError(true);
-        toast.error("Invalid credentials. Please check your email and password.");
+        if (result.error.includes("Too many")) {
+          toast.error("Too many failed attempts. Please wait 15 minutes before trying again.");
+        } else {
+          toast.error("Invalid credentials. Please check your email and password.");
+        }
       } else {
         toast.success("Logged in successfully! Redirecting...");
         // Redirection is handled by the useEffect above

@@ -16,6 +16,7 @@ import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
+import ExportCsvButton from "@/src/components/ExportCsvButton";
 
 export default async function TeacherRoster({
   searchParams,
@@ -92,10 +93,15 @@ export default async function TeacherRoster({
 
         <Card className="border-none shadow-xl shadow-border/5">
           <CardHeader>
-            <CardTitle>Attendance Monitoring</CardTitle>
-            <CardDescription>
-              Manual override enabled. Changes sync automatically after 5 seconds.
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle>Attendance Monitoring</CardTitle>
+                <CardDescription>
+                  Manual override enabled. Changes sync automatically after 5 seconds.
+                </CardDescription>
+              </div>
+              <ExportCsvButton sectionId={section.id} sectionName={section.name} />
+            </div>
           </CardHeader>
           <CardContent>
             <RosterTable 

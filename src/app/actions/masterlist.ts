@@ -451,6 +451,49 @@ export async function regenerateQrToken(studentDbId: string) {
   return { success: true, message: `QR token regenerated for ${student.user.name}.` };
 }
 
+export async function getAttendanceRange(sectionId: string, from: Date, to: Date) {
+  const session = await getServerSession(authOptions);
+  if (
+    !session ||
+    ((session.user as any).role !== UserRole.ADMIN &&
+      (session.user as any).role !== UserRole.TEACHER)
+  ) {
+    throw new Error("Unauthorized");
+  }
+
+  // Teachers can only export their own section
+  if ((session.user as any).role === UserRole.TEACHER) {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId: (session.user as any).id },
+      include: { sections: true },
+    });
+    const ownsSectionId = teacher?.sections.some((s) => s.id === sectionId);
+    if (!ownsSectionId) throw new Error("Unauthorized");
+  }
+
+  const fromUTC = getUTCMidnight(from);
+  const toUTC = new Date(getUTCMidnight(to).getTime() + 24 * 60 * 60 * 1000);
+
+  const section = await prisma.section.findUnique({
+    where: { id: sectionId },
+    include: { teacher: { include: { user: true } } },
+  });
+
+  const students = await prisma.student.findMany({
+    where: { sectionId },
+    include: {
+      user: true,
+      attendances: {
+        where: { date: { gte: fromUTC, lt: toUTC }, sectionId },
+        orderBy: { date: "asc" },
+      },
+    },
+    orderBy: { studentId: "asc" },
+  });
+
+  return { section, students, fromUTC, toUTC };
+}
+
 export interface ImportResult {
   success: boolean;
   message: string;

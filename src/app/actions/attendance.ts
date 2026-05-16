@@ -167,7 +167,7 @@ export async function scanQrAttendance(qrToken: string, sectionId: string) {
   const oldStatus = existing?.status || null;
 
   await prisma.$transaction(async (tx) => {
-    await tx.attendance.upsert({
+    const attendance = await tx.attendance.upsert({
       where: {
         studentId_date_sectionId: {
           studentId: student.id,
@@ -186,7 +186,7 @@ export async function scanQrAttendance(qrToken: string, sectionId: string) {
 
     await tx.attendanceAudit.create({
       data: {
-        attendanceId: "SCAN", // Placeholder since we don't have the id easily without extra query
+        attendanceId: attendance.id,
         changedBy: (session.user as any).id,
         oldStatus,
         newStatus: "PRESENT",

@@ -14,6 +14,8 @@ import SystemSettingsForm from "@/src/components/SystemSettingsForm";
 import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search } from "lucide-react";
 import DemoAccountsCard from "./DemoAccountsCard";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
+import ChangePasswordForm from "@/src/components/ChangePasswordForm";
+import Link from "next/link";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -177,9 +179,9 @@ export default async function AdminDashboard() {
                       <p className="text-xs text-amber-500/70 mt-0.5">
                         There are {stats.pendingAppeals} appeals waiting for your response.
                       </p>
-                      <button className="mt-3 text-[10px] font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400 transition-colors">
+                      <Link href="/teacher/appeals" className="mt-3 inline-block text-[10px] font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400 transition-colors">
                         View Appeals →
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -189,6 +191,7 @@ export default async function AdminDashboard() {
         </div>
 
         <DemoAccountsCard />
+        <ChangePasswordForm />
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { authOptions } from "@/src/lib/auth";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/src/lib/audit";
+import { getUTCMidnight } from "@/src/lib/date";
 
 export async function submitAppeal(studentId: string, description: string, imageUrl: string) {
   const session = await getServerSession(authOptions);
@@ -90,8 +91,7 @@ export async function reviewAppeal(appealId: string, status: "APPROVED" | "REJEC
     });
 
     if (student?.sectionId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = getUTCMidnight();
 
       await prisma.attendance.upsert({
         where: {

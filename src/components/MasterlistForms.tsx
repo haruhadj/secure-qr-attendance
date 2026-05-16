@@ -107,6 +107,7 @@ export function AddStudentForm({
               onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
               required
             />
+            <p className="text-[11px] text-muted-foreground/60">Default login password will be their Student ID.</p>
           </div>
           {!initialSectionId && (
             <div className="space-y-2">
