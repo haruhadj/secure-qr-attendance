@@ -12,6 +12,9 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
     "@next-auth/prisma-adapter": "^1.0.7",

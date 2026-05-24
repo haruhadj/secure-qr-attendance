@@ -177,6 +177,18 @@ src/
 | `pnpm db:seed` | Seed demo data (admin, teacher, 5 students in STEM-A) |
 | `pnpm postinstall` | Auto-runs `prisma generate` |
 
+Also, for future resets the correct order is now just:
+
+```bash
+pnpm db:push && pnpm db:seed
+```
+
+Drops everything and re-creates the seed accounts (admin, 1 teacher, 5 students, 3 subjects).
+
+Command pnpm in …/secure-qr-attendance
+
+pnpm prisma migrate reset --force
+
 ---
 
 ### 8. Critical Rules
