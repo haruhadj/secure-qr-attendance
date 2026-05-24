@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AddSectionForm,
   EditSectionModal,
@@ -52,8 +52,13 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
   const searchParams = useSearchParams();
 
   const tab = (searchParams.get("tab") as Tab) ?? "sections";
-  const sectionSearch = searchParams.get("sq") ?? "";
-  const subjectSearch = searchParams.get("bq") ?? "";
+
+  // Local state for inputs — instant typing feedback
+  const [sectionSearch, setSectionSearch] = useState(searchParams.get("sq") ?? "");
+  const [subjectSearch, setSubjectSearch] = useState(searchParams.get("bq") ?? "");
+
+  // Debounce URL updates so back-nav restores state, but router.replace doesn't fire every keystroke
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setParam = useCallback(
     (updates: Record<string, string>) => {
@@ -68,8 +73,24 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
   );
 
   const setTab = (t: Tab) => setParam({ tab: t });
-  const setSectionSearch = (v: string) => setParam({ sq: v });
-  const setSubjectSearch = (v: string) => setParam({ bq: v });
+
+  const handleSectionSearch = (v: string) => {
+    setSectionSearch(v);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setParam({ sq: v }), 400);
+  };
+
+  const handleSubjectSearch = (v: string) => {
+    setSubjectSearch(v);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setParam({ bq: v }), 400);
+  };
+
+  // Sync local state if URL changes externally (e.g. back button)
+  useEffect(() => {
+    setSectionSearch(searchParams.get("sq") ?? "");
+    setSubjectSearch(searchParams.get("bq") ?? "");
+  }, [searchParams]);
 
   const filteredSections = sections.filter((s) => {
     const q = sectionSearch.toLowerCase();
@@ -133,7 +154,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                 <Input
                   placeholder="Search by name or adviser…"
                   value={sectionSearch}
-                  onChange={(e) => setSectionSearch(e.target.value)}
+                  onChange={(e) => handleSectionSearch(e.target.value)}
                   className="pl-9 h-9 bg-muted/40 border-border"
                 />
               </div>
@@ -207,7 +228,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                 <Input
                   placeholder="Search by code, name, teacher, or schedule…"
                   value={subjectSearch}
-                  onChange={(e) => setSubjectSearch(e.target.value)}
+                  onChange={(e) => handleSubjectSearch(e.target.value)}
                   className="pl-9 h-9 bg-muted/40 border-border"
                 />
               </div>
