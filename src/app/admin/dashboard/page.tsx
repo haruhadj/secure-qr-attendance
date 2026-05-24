@@ -11,7 +11,7 @@ import { getAdminDashboardStats, getSystemSettings } from "@/src/app/actions/adm
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import SystemSettingsForm from "@/src/components/SystemSettingsForm";
-import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search } from "lucide-react";
+import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search, QrCode, Upload, Trash2, RefreshCw, Key, BookMarked, ScanLine } from "lucide-react";
 import DemoAccountsCard from "./DemoAccountsCard";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
@@ -108,38 +108,43 @@ export default async function AdminDashboard() {
               </Badge>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {stats.recentAudits.map((activity: any) => (
-                  <div key={activity.id} className="flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/20 hover:shadow-md transition-all duration-200">
-                    <div className={`p-2.5 rounded-xl shrink-0 ${getActivityColor(activity.type)}`}>
+              <div className="space-y-3">
+                {stats.recentAudits.map((activity: any) => {
+                  const detail = getActivityDetail(activity.type, activity.metadata);
+                  return (
+                  <div key={activity.id} className="flex items-start gap-3 p-3.5 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-md transition-all duration-200">
+                    <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${getActivityColor(activity.type)}`}>
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-sm font-semibold text-foreground truncate">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground leading-snug">
                           {activity.description}
                         </p>
-                        <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap bg-muted px-2 py-1 rounded-full">
+                        <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap bg-muted px-2 py-0.5 rounded-full shrink-0">
                           {formatRelativeTime(new Date(activity.createdAt))}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      {detail && (
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{detail}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1.5">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                            {activity.user?.name?.[0] || "U"}
+                          <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground">
+                            {activity.user?.name?.[0]?.toUpperCase() || "S"}
                           </div>
-                          <span className="text-xs text-muted-foreground font-medium">
+                          <span className="text-xs text-muted-foreground">
                             {activity.user?.name || "System"}
                           </span>
                         </div>
                         <span className="text-[10px] text-muted-foreground/30">•</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">
-                          {activity.type.replace("_", " ")}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">
+                          {formatActivityType(activity.type)}
                         </span>
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
                 {stats.recentAudits.length === 0 && (
                   <div className="text-center py-12">
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted text-muted-foreground/30 mb-4">
@@ -199,31 +204,128 @@ export default async function AdminDashboard() {
 
 function getActivityIcon(type: string) {
   switch (type) {
-    case "STAFF_ADD": return <UserPlus className="w-4 h-4" />;
-    case "STAFF_REMOVE": return <UserMinus className="w-4 h-4" />;
-    case "STUDENT_ADD": return <GraduationCap className="w-4 h-4" />;
-    case "STUDENT_REMOVE": return <UserMinus className="w-4 h-4" />;
-    case "SECTION_ADD": return <FolderOpen className="w-4 h-4" />;
-    case "SECTION_UPDATE": return <BookOpen className="w-4 h-4" />;
-    case "ATTENDANCE_EDIT": return <Edit className="w-4 h-4" />;
-    case "ATTENDANCE_SCAN": return <Search className="w-4 h-4" />;
-    case "SETTING_UPDATE": return <Settings className="w-4 h-4" />;
-    case "APPEAL_REVIEW": return <CheckCircle className="w-4 h-4" />;
-    default: return <Activity className="w-4 h-4" />;
+    case "STAFF_ADD":             return <UserPlus className="w-4 h-4" />;
+    case "STAFF_REMOVE":          return <UserMinus className="w-4 h-4" />;
+    case "STUDENT_ADD":           return <GraduationCap className="w-4 h-4" />;
+    case "STUDENT_REMOVE":        return <UserMinus className="w-4 h-4" />;
+    case "STUDENT_UPDATE":        return <Edit className="w-4 h-4" />;
+    case "STUDENT_PASSWORD_RESET":return <Key className="w-4 h-4" />;
+    case "STUDENT_QR_REGEN":      return <RefreshCw className="w-4 h-4" />;
+    case "SECTION_ADD":           return <FolderOpen className="w-4 h-4" />;
+    case "SECTION_UPDATE":        return <FolderOpen className="w-4 h-4" />;
+    case "SECTION_REMOVE":        return <Trash2 className="w-4 h-4" />;
+    case "SUBJECT_ADD":           return <BookOpen className="w-4 h-4" />;
+    case "SUBJECT_UPDATE":        return <BookOpen className="w-4 h-4" />;
+    case "SUBJECT_REMOVE":        return <Trash2 className="w-4 h-4" />;
+    case "ATTENDANCE_SCAN":       return <ScanLine className="w-4 h-4" />;
+    case "ATTENDANCE_EDIT":       return <Edit className="w-4 h-4" />;
+    case "ATTENDANCE_ADMIN_EDIT": return <Edit className="w-4 h-4" />;
+    case "ATTENDANCE_DELETE":     return <Trash2 className="w-4 h-4" />;
+    case "MASTERLIST_IMPORT":     return <Upload className="w-4 h-4" />;
+    case "SETTING_UPDATE":        return <Settings className="w-4 h-4" />;
+    case "APPEAL_REVIEW":         return <CheckCircle className="w-4 h-4" />;
+    default:                      return <Activity className="w-4 h-4" />;
   }
 }
 
 function getActivityColor(type: string) {
-  if (type.includes("ADD") || type.includes("SCAN") || type.includes("REVIEW")) {
-    return "bg-green-500/10 text-green-500 border border-green-500/20";
+  if (["STAFF_ADD","STUDENT_ADD","SECTION_ADD","SUBJECT_ADD","ATTENDANCE_SCAN","APPEAL_REVIEW","MASTERLIST_IMPORT"].includes(type))
+    return "bg-green-500/10 text-green-500";
+  if (["STAFF_REMOVE","STUDENT_REMOVE","SECTION_REMOVE","SUBJECT_REMOVE","ATTENDANCE_DELETE"].includes(type))
+    return "bg-red-500/10 text-red-500";
+  if (["ATTENDANCE_EDIT","ATTENDANCE_ADMIN_EDIT","SECTION_UPDATE","SUBJECT_UPDATE","STUDENT_UPDATE","SETTING_UPDATE"].includes(type))
+    return "bg-blue-500/10 text-blue-500";
+  if (["STUDENT_PASSWORD_RESET","STUDENT_QR_REGEN"].includes(type))
+    return "bg-amber-500/10 text-amber-500";
+  return "bg-muted text-muted-foreground";
+}
+
+function formatActivityType(type: string) {
+  return type.replace(/_/g, " ");
+}
+
+function getActivityDetail(type: string, meta: any): string | null {
+  if (!meta) return null;
+  switch (type) {
+    case "ATTENDANCE_SCAN":
+      return [
+        meta.studentName && `Student: ${meta.studentName}`,
+        meta.subjectName && `Subject: ${meta.subjectName}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "ATTENDANCE_EDIT":
+    case "ATTENDANCE_ADMIN_EDIT":
+      return [
+        meta.studentId && `ID: ${meta.studentId}`,
+        meta.subjectId && `Subject ID: ${meta.subjectId}`,
+        meta.oldStatus && meta.newStatus && `${meta.oldStatus} → ${meta.newStatus}`,
+        !meta.oldStatus && meta.status && `Status: ${meta.status}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "ATTENDANCE_DELETE":
+      return [
+        meta.studentId && `Student ID: ${meta.studentId}`,
+        meta.date && `Date: ${new Date(meta.date).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" })}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "STUDENT_ADD":
+      return [
+        meta.name && `Name: ${meta.name}`,
+        meta.studentId && `ID: ${meta.studentId}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "STUDENT_UPDATE":
+      return meta.name ? `Name: ${meta.name}` : null;
+    case "STUDENT_REMOVE":
+      return meta.name ? `${meta.name}${meta.studentId ? ` (${meta.studentId})` : ""}` : null;
+    case "STUDENT_PASSWORD_RESET":
+      return meta.studentId ? `Student ID: ${meta.studentId}` : null;
+    case "STUDENT_QR_REGEN":
+      return meta.studentId ? `Student ID: ${meta.studentId}` : null;
+    case "SECTION_ADD":
+    case "SECTION_UPDATE":
+      return meta.name ? `Section: ${meta.name}` : null;
+    case "SECTION_REMOVE":
+      return meta.name ? `Removed: ${meta.name}` : null;
+    case "SUBJECT_ADD":
+      return [
+        meta.code && `Code: ${meta.code}`,
+        meta.name && `Name: ${meta.name}`,
+        meta.scheduleDay && `Days: ${meta.scheduleDay}`,
+        meta.scheduleTime && `Time: ${meta.scheduleTime}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "SUBJECT_UPDATE":
+      return [
+        meta.code && `Code: ${meta.code}`,
+        meta.scheduleDay && `Days: ${meta.scheduleDay}`,
+        meta.scheduleTime && `Time: ${meta.scheduleTime}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "SUBJECT_REMOVE":
+      return meta.code ? `Removed: ${meta.code}` : null;
+    case "MASTERLIST_IMPORT":{
+      const parts = [
+        meta.sectionsCreated > 0 && `${meta.sectionsCreated} sections`,
+        meta.subjectsCreated > 0 && `${meta.subjectsCreated} subjects`,
+        meta.teachersCreated > 0 && `${meta.teachersCreated} teachers`,
+        meta.studentsCreated > 0 && `${meta.studentsCreated} students`,
+        meta.enrollmentsCreated > 0 && `${meta.enrollmentsCreated} enrollments`,
+        meta.errors?.length > 0 && `${meta.errors.length} errors`,
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join("  ·  ") : null;
+    }
+    case "STAFF_ADD":
+      return [
+        meta.name && `Name: ${meta.name}`,
+        meta.role && `Role: ${meta.role}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    case "STAFF_REMOVE":
+      return meta.name ? `${meta.name}${meta.role ? ` (${meta.role})` : ""}` : null;
+    case "SETTING_UPDATE":
+      return meta.key ? `${meta.key}: ${meta.value ?? "—"}` : null;
+    case "APPEAL_REVIEW":
+      return [
+        meta.status && `Decision: ${meta.status}`,
+        meta.studentId && `Student DB ID: ${meta.studentId}`,
+      ].filter(Boolean).join("  ·  ") || null;
+    default:
+      return null;
   }
-  if (type.includes("REMOVE") || type.includes("DELETE")) {
-    return "bg-red-500/10 text-red-500 border border-red-500/20";
-  }
-  if (type.includes("UPDATE") || type.includes("EDIT")) {
-    return "bg-blue-500/10 text-blue-500 border border-blue-500/20";
-  }
-  return "bg-muted text-muted-foreground border border-border";
 }
 
 function formatRelativeTime(date: Date) {
