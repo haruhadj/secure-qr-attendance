@@ -27,8 +27,8 @@ export default async function AdminMasterlist() {
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Users className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
+              <Users className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               Masterlist
             </h1>
             <p className="text-muted-foreground">

@@ -30,8 +30,8 @@ export default async function TeacherAppeals() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <FileWarning className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
+            <FileWarning className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
             Student Appeals
           </h1>
           <p className="text-muted-foreground">

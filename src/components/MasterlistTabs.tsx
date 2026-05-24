@@ -166,10 +166,10 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[35%]">Section</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[35%]">Adviser</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[15%]">Students</th>
-                  <th className="px-4 py-2.5 w-[15%]"></th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Section</th>
+                  <th className="hidden sm:table-cell text-left px-4 py-2.5 font-medium text-muted-foreground">Adviser</th>
+                  <th className="hidden sm:table-cell text-left px-4 py-2.5 font-medium text-muted-foreground w-[15%]">Students</th>
+                  <th className="px-4 py-2.5 w-[80px]"></th>
                 </tr>
               </thead>
               <tbody>
@@ -184,13 +184,18 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                         {section.name}
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
                       </span>
+                      <div className="sm:hidden text-xs font-normal text-muted-foreground mt-0.5 flex items-center gap-2">
+                        <span>{section.teacher?.user?.name || <span className="text-amber-500">Unassigned</span>}</span>
+                        <span className="text-muted-foreground/30">·</span>
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />{section._count.students}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground">
                       {section.teacher?.user?.name || (
                         <span className="text-amber-500 text-xs">Unassigned</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden sm:table-cell px-4 py-3">
                       <span className="flex items-center gap-1.5 text-muted-foreground">
                         <Users className="w-3.5 h-3.5" />
                         {section._count.students}
@@ -198,7 +203,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                     </td>
                     <td className="px-4 py-3">
                       <div
-                        className="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        className="flex items-center justify-end gap-1"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <EditSectionModal section={section} teachers={teachers} />
@@ -240,12 +245,12 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[12%]">Code</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[28%]">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[22%]">Teacher</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[20%]">Schedule</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[10%]">Enrolled</th>
-                  <th className="px-4 py-2.5 w-[8%]"></th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-[90px]">Code</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
+                  <th className="hidden md:table-cell text-left px-4 py-2.5 font-medium text-muted-foreground">Teacher</th>
+                  <th className="hidden md:table-cell text-left px-4 py-2.5 font-medium text-muted-foreground">Schedule</th>
+                  <th className="hidden sm:table-cell text-left px-4 py-2.5 font-medium text-muted-foreground w-[90px]">Enrolled</th>
+                  <th className="px-4 py-2.5 w-[80px]"></th>
                 </tr>
               </thead>
               <tbody>
@@ -263,13 +268,19 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                         {subject.name}
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
                       </span>
+                      <div className="md:hidden text-xs font-normal text-muted-foreground mt-0.5 space-y-0.5">
+                        <div>{subject.teacher?.user?.name || <span className="text-amber-500">Unassigned</span>}</div>
+                        {subject.scheduleDay && (
+                          <div className="flex items-center gap-1"><Clock className="w-3 h-3" />{subject.scheduleDay}{subject.scheduleTime && ` · ${subject.scheduleTime}`}</div>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="hidden md:table-cell px-4 py-3 text-muted-foreground">
                       {subject.teacher?.user?.name || (
                         <span className="text-amber-500 text-xs">Unassigned</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="hidden md:table-cell px-4 py-3 text-muted-foreground">
                       {subject.scheduleDay ? (
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 shrink-0" />
@@ -280,7 +291,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                         <span className="text-muted-foreground/30">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="hidden sm:table-cell px-4 py-3">
                       <span className="flex items-center gap-1.5 text-muted-foreground">
                         <Users className="w-3.5 h-3.5" />
                         {subject._count.enrollments}
@@ -288,7 +299,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                     </td>
                     <td className="px-4 py-3">
                       <div
-                        className="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        className="flex items-center justify-end gap-1"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <EditSubjectModal subject={subject} teachers={teachers} />

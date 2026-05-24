@@ -36,8 +36,8 @@ export default async function TeacherScanner() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans flex items-center gap-3">
-              <ScanLine className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-sans flex items-center gap-2 md:gap-3">
+              <ScanLine className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               QR Scanner
             </h1>
             <p className="text-muted-foreground flex items-center gap-2">

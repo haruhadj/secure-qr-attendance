@@ -61,8 +61,8 @@ export default async function SectionMasterlist({
                 Back to Masterlist
               </Link>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3 font-sans">
-              <Users className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3 font-sans">
+              <Users className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               {section.name}
             </h1>
             <p className="text-muted-foreground">
@@ -103,10 +103,10 @@ export default async function SectionMasterlist({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">Student ID</TableHead>
+                  <TableHead className="w-[110px]">Student ID</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-[120px]"></TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="w-[130px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,9 +116,10 @@ export default async function SectionMasterlist({
                       {student.studentId}
                     </TableCell>
                     <TableCell className="font-medium text-foreground">
-                      {student.user.name}
+                      <div>{student.user.name}</div>
+                      <div className="md:hidden text-xs text-muted-foreground truncate max-w-[140px]">{student.user.email}</div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                       {student.user.email}
                     </TableCell>
                     <TableCell>

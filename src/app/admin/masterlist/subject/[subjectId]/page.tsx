@@ -65,8 +65,8 @@ export default async function SubjectMasterlist({
                 Back to Masterlist
               </Link>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3 font-sans">
-              <BookOpen className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3 font-sans">
+              <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               <span className="font-mono text-primary">{subject.code}</span>
               <span className="text-foreground">{subject.name}</span>
             </h1>
@@ -113,12 +113,12 @@ export default async function SubjectMasterlist({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">Student ID</TableHead>
+                  <TableHead className="w-[110px]">Student ID</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-[100px]">Status</TableHead>
-                  <TableHead className="w-[80px]">Time</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
+                  <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="w-[90px]">Status</TableHead>
+                  <TableHead className="hidden sm:table-cell w-[70px]">Time</TableHead>
+                  <TableHead className="w-[120px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,9 +130,10 @@ export default async function SubjectMasterlist({
                         {student.studentId}
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
-                        {student.user.name}
+                        <div>{student.user.name}</div>
+                        <div className="md:hidden text-xs text-muted-foreground truncate max-w-[140px]">{student.user.email}</div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                         {student.user.email}
                       </TableCell>
                       <TableCell>
@@ -152,7 +153,7 @@ export default async function SubjectMasterlist({
                           <span className="text-xs text-muted-foreground/30">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
                         {attendance
                           ? formatTime(attendance.updatedAt)
                           : <span className="text-muted-foreground/30">—</span>}

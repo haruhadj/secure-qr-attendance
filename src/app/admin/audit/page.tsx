@@ -61,8 +61,8 @@ export default async function AdminAudit({
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans flex items-center gap-3">
-              <ShieldCheck className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-sans flex items-center gap-2 md:gap-3">
+              <ShieldCheck className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               Accountability Audit
             </h1>
             <p className="text-muted-foreground">
@@ -86,12 +86,12 @@ export default async function AdminAudit({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Timestamp</TableHead>
+                  <TableHead className="hidden sm:table-cell">Timestamp</TableHead>
                   <TableHead>Student</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Changed By</TableHead>
-                  <TableHead>Status Change</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="hidden md:table-cell">Subject</TableHead>
+                  <TableHead className="hidden md:table-cell">Changed By</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -99,7 +99,7 @@ export default async function AdminAudit({
                   const attendance = attendanceMap[audit.attendanceId];
                   return (
                   <TableRow key={audit.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden sm:table-cell font-mono text-xs text-muted-foreground whitespace-nowrap">
                       {formatDateTime(audit.timestamp)}
                     </TableCell>
                     <TableCell className="font-medium text-sm">
@@ -107,11 +107,13 @@ export default async function AdminAudit({
                       {attendance?.student?.studentId && (
                         <div className="text-[10px] text-muted-foreground font-mono">{attendance.student.studentId}</div>
                       )}
+                      <div className="sm:hidden text-[10px] text-muted-foreground mt-0.5 font-mono">{formatDateTime(audit.timestamp)}</div>
+                      <div className="md:hidden text-xs text-muted-foreground mt-0.5">{attendance?.subject?.name || "—"}</div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                       {attendance?.subject?.name || <span className="text-muted-foreground/40 italic">—</span>}
                     </TableCell>
-                    <TableCell className="font-medium text-sm">
+                    <TableCell className="hidden md:table-cell font-medium text-sm">
                       {userMap[audit.changedBy] || "System"}
                     </TableCell>
                     <TableCell>
@@ -137,7 +139,7 @@ export default async function AdminAudit({
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground italic">
+                    <TableCell className="hidden sm:table-cell text-right text-xs text-muted-foreground italic">
                       {audit.reason || "Manual Override"}
                     </TableCell>
                   </TableRow>

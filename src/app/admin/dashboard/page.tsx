@@ -32,8 +32,8 @@ export default async function AdminDashboard() {
       <AutoRefresh interval={30000} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Activity className="w-8 h-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
+            <Activity className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
             Admin Dashboard
           </h1>
           <p className="text-muted-foreground">
@@ -117,11 +117,11 @@ export default async function AdminDashboard() {
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
                         <p className="text-sm font-semibold text-foreground leading-snug">
                           {activity.description}
                         </p>
-                        <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap bg-muted px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap bg-muted px-2 py-0.5 rounded-full self-start shrink-0">
                           {formatRelativeTime(new Date(activity.createdAt))}
                         </span>
                       </div>

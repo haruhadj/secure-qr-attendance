@@ -72,7 +72,7 @@ export default async function TeacherRoster({
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-sans">
               Class Roster
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-muted-foreground">

@@ -110,26 +110,27 @@ export default function RosterTable({
     <Table>
       <TableHeader>
         <TableRow className="hover:bg-transparent border-border">
-          <TableHead className="w-[120px]">Student ID</TableHead>
-          <TableHead>Account Name</TableHead>
-          <TableHead>Current Status</TableHead>
-          <TableHead>Time</TableHead>
+          <TableHead className="hidden sm:table-cell w-[120px]">Student ID</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="hidden sm:table-cell">Time</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {students.map((student) => (
           <TableRow key={student.id} className="border-border/50 group hover:bg-muted/50 transition-colors">
-            <TableCell className="font-mono text-xs font-medium text-muted-foreground">
+            <TableCell className="hidden sm:table-cell font-mono text-xs font-medium text-muted-foreground">
               {student.studentId}
             </TableCell>
             <TableCell className="font-medium text-foreground">
-              {student.name}
+              <div>{student.name}</div>
+              <div className="sm:hidden font-mono text-[10px] text-muted-foreground">{student.studentId}</div>
             </TableCell>
             <TableCell>
               {getStatusBadge(student.status)}
             </TableCell>
-            <TableCell className="text-xs text-muted-foreground">
+            <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
               {student.attendanceTime
                 ? formatTime(student.attendanceTime)
                 : <span className="text-muted-foreground/30">—</span>}

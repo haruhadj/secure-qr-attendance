@@ -36,8 +36,8 @@ export default async function AdminStaffManagement() {
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-              <Briefcase className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
+              <Briefcase className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
               Staff Management
             </h1>
             <p className="text-muted-foreground">
@@ -65,9 +65,9 @@ export default async function AdminStaffManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Subjects / Adviser</TableHead>
+                  <TableHead className="hidden md:table-cell">Subjects / Adviser</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -75,12 +75,15 @@ export default async function AdminStaffManagement() {
                 {staff.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium text-foreground">
-                      {user.name}
-                      {user.id === currentUserId && (
-                        <Badge variant="outline" className="ml-2 text-[10px] text-primary border-primary/50">You</Badge>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {user.name}
+                        {user.id === currentUserId && (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary/50">You</Badge>
+                        )}
+                      </div>
+                      <div className="sm:hidden text-xs text-muted-foreground mt-0.5 truncate max-w-[160px]">{user.email}</div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
                       {user.email}
                     </TableCell>
                     <TableCell>
@@ -94,7 +97,7 @@ export default async function AdminStaffManagement() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {user.role === UserRole.TEACHER && user.teacher ? (
                         <div className="flex flex-wrap gap-1">
                           {user.teacher.subjects.map((s) => (
