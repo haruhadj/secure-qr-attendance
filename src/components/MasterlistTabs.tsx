@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useCallback } from "react";
 import {
   AddSectionForm,
   EditSectionModal,
@@ -47,10 +47,29 @@ interface Props {
 type Tab = "sections" | "subjects";
 
 export default function MasterlistTabs({ sections, subjects, teachers }: Props) {
-  const [tab, setTab] = useState<Tab>("sections");
-  const [sectionSearch, setSectionSearch] = useState("");
-  const [subjectSearch, setSubjectSearch] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const tab = (searchParams.get("tab") as Tab) ?? "sections";
+  const sectionSearch = searchParams.get("sq") ?? "";
+  const subjectSearch = searchParams.get("bq") ?? "";
+
+  const setParam = useCallback(
+    (updates: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([k, v]) => {
+        if (v) params.set(k, v);
+        else params.delete(k);
+      });
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname, searchParams]
+  );
+
+  const setTab = (t: Tab) => setParam({ tab: t });
+  const setSectionSearch = (v: string) => setParam({ sq: v });
+  const setSubjectSearch = (v: string) => setParam({ bq: v });
 
   const filteredSections = sections.filter((s) => {
     const q = sectionSearch.toLowerCase();

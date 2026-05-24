@@ -14,6 +14,7 @@ import {
   ViewQrModal,
   EditAttendanceModal,
   DeleteAttendanceButton,
+  ManageStudentSubjectsModal,
 } from "@/src/components/MasterlistForms";
 import { BookOpen, GraduationCap, ChevronLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
@@ -49,7 +50,7 @@ export default async function SubjectMasterlist({
     redirect("/admin/masterlist");
   }
 
-  const { subject, students } = data;
+  const { subject, students, subjects } = data;
   const sections = await prisma.section.findMany({ orderBy: { name: "asc" } });
 
   return (
@@ -158,6 +159,12 @@ export default async function SubjectMasterlist({
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
+                          <ManageStudentSubjectsModal
+                            studentDbId={student.id}
+                            studentName={student.user.name || "Unknown"}
+                            allSubjects={subjects.map((s) => ({ id: s.id, code: s.code, name: s.name }))}
+                            enrolledSubjectIds={student.enrolledSubjects.map((e) => e.subjectId)}
+                          />
                           <EditAttendanceModal
                             studentDbId={student.id}
                             studentName={student.user.name || "Unknown"}

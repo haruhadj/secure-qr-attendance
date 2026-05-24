@@ -72,8 +72,9 @@ export async function getSectionMasterlist(sectionId: string, date?: Date) {
   });
 
   const sections = await prisma.section.findMany({ orderBy: { name: "asc" } });
+  const subjects = await prisma.subject.findMany({ orderBy: { code: "asc" } });
 
-  return { section, students, sections };
+  return { section, students, sections, subjects };
 }
 
 export async function getSubjectMasterlist(subjectId: string, date?: Date) {
@@ -98,6 +99,7 @@ export async function getSubjectMasterlist(subjectId: string, date?: Date) {
       student: {
         include: {
           user: true,
+          enrolledSubjects: true,
           attendances: {
             where: { date: { gte: selectedDate, lt: nextDay }, subjectId },
           },
@@ -801,4 +803,31 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
   } catch (err: any) {
     return { success: false, message: `Import failed: ${err?.message || "Unknown error"}`, summary };
   }
+}
+
+export async function updateStudentEnrollments(studentDbId: string, subjectIds: string[]) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+
+  const student = await prisma.student.findUnique({ where: { id: studentDbId } });
+  if (!student) return { success: false, message: "Student not found." };
+
+  // Delete enrollments not in new list
+  await prisma.studentSubject.deleteMany({
+    where: { studentId: studentDbId, subjectId: { notIn: subjectIds } },
+  });
+
+  // Create missing enrollments
+  for (const subjectId of subjectIds) {
+    await prisma.studentSubject.upsert({
+      where: { studentId_subjectId: { studentId: studentDbId, subjectId } },
+      update: {},
+      create: { studentId: studentDbId, subjectId },
+    });
+  }
+
+  revalidatePath("/admin/masterlist");
+  return { success: true, message: "Enrollments updated." };
 }

@@ -24,6 +24,8 @@ interface ScanResult {
   message: string;
   studentName?: string;
   studentId?: string;
+  subjectCode?: string;
+  subjectName?: string;
   alreadyPresent?: boolean;
   timestamp: Date;
 }
@@ -305,11 +307,18 @@ export default function QrScanner({ subjects }: { subjects: Subject[] }) {
                       </p>
                     </div>
                   </div>
-                  {scan.success && (
-                    <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                      Present
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {scan.subjectCode && (
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        {scan.subjectCode}
+                      </Badge>
+                    )}
+                    {scan.success && (
+                      <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                        Present
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

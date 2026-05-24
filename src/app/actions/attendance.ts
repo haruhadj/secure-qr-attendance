@@ -120,7 +120,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
   }
 
   if (!teacher || subject.teacherId !== teacher.id) {
-    return { success: false, message: `You are not the teacher for ${subject.name}.` };
+    return { success: false, message: `You are not the teacher for ${subject.name}.`, subjectCode: subject.code };
   }
 
   // 3. Verify student is enrolled in this subject
@@ -132,6 +132,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
     return {
       success: false,
       message: `${student.user.name} is not enrolled in ${subject.name}.`,
+      subjectCode: subject.code,
     };
   }
 
@@ -153,6 +154,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
       success: false,
       message: `${student.user.name} is already marked PRESENT today.`,
       alreadyPresent: true,
+      subjectCode: subject.code,
     };
   }
 
@@ -206,5 +208,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
     message: `✓ ${student.user.name} (${student.studentId}) marked PRESENT`,
     studentName: student.user.name,
     studentId: student.studentId,
+    subjectCode: subject.code,
+    subjectName: subject.name,
   };
 }

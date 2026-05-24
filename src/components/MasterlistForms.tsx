@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { addStudent, removeStudent, addSection, updateSection, removeSection, updateStudent, adminUpdateAttendance, deleteAttendance, resetStudentPasswordToTemp, regenerateQrToken, addSubject, updateSubject, removeSubject } from "@/src/app/actions/masterlist";
+import { addStudent, removeStudent, addSection, updateSection, removeSection, updateStudent, adminUpdateAttendance, deleteAttendance, resetStudentPasswordToTemp, regenerateQrToken, addSubject, updateSubject, removeSubject, updateStudentEnrollments } from "@/src/app/actions/masterlist";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
-import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen } from "lucide-react";
+import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen, BookMarked } from "lucide-react";
 import { formatDate } from "@/src/lib/date";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -1133,6 +1133,93 @@ export function EditSubjectModal({
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function ManageStudentSubjectsModal({
+  studentDbId,
+  studentName,
+  allSubjects,
+  enrolledSubjectIds,
+}: {
+  studentDbId: string;
+  studentName: string;
+  allSubjects: { id: string; code: string; name: string }[];
+  enrolledSubjectIds: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<string[]>(enrolledSubjectIds);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = (id: string) =>
+    setSelected((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const result = await updateStudentEnrollments(studentDbId, selected);
+      if (result.success) { toast.success(result.message); setOpen(false); }
+      else toast.error(result.message);
+    } catch { toast.error("Failed to update enrollments."); }
+    finally { setLoading(false); }
+  };
+
+  if (!open) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(e) => { e.preventDefault(); setSelected(enrolledSubjectIds); setOpen(true); }}
+        className="h-7 w-7 text-muted-foreground hover:text-primary"
+        title="Manage Subject Enrollments"
+      >
+        <BookMarked className="w-3.5 h-3.5" />
+      </Button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <Card className="w-full max-w-sm shadow-2xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Manage Subjects</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{studentName}</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="h-8 w-8">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="rounded-md border border-input bg-background divide-y divide-border max-h-64 overflow-y-auto">
+            {allSubjects.length === 0 && (
+              <p className="text-xs text-muted-foreground px-3 py-4 text-center italic">No subjects available.</p>
+            )}
+            {allSubjects.map((sub) => (
+              <label key={sub.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(sub.id)}
+                  onChange={() => toggle(sub.id)}
+                  className="accent-primary"
+                />
+                <span className="font-mono text-xs text-primary font-bold w-16 shrink-0">{sub.code}</span>
+                <span className="text-sm text-foreground">{sub.name}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={loading} className="gap-2">
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

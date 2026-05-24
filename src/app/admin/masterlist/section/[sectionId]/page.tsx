@@ -13,6 +13,7 @@ import {
   RemoveStudentButton,
   EditStudentModal,
   ViewQrModal,
+  ManageStudentSubjectsModal,
 } from "@/src/components/MasterlistForms";
 import { Users, GraduationCap, ChevronLeft, Calendar } from "lucide-react";
 import Link from "next/link";
@@ -46,7 +47,7 @@ export default async function SectionMasterlist({
     redirect("/admin/masterlist");
   }
 
-  const { section, students, sections } = data;
+  const { section, students, sections, subjects } = data;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -105,7 +106,7 @@ export default async function SectionMasterlist({
                   <TableHead className="w-[120px]">Student ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
+                  <TableHead className="w-[120px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,6 +123,12 @@ export default async function SectionMasterlist({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
+                        <ManageStudentSubjectsModal
+                          studentDbId={student.id}
+                          studentName={student.user.name || "Unknown"}
+                          allSubjects={subjects.map((s) => ({ id: s.id, code: s.code, name: s.name }))}
+                          enrolledSubjectIds={student.enrolledSubjects.map((e) => e.subjectId)}
+                        />
                         <ViewQrModal
                           studentName={student.user.name || "Unknown"}
                           qrToken={student.qrToken}
