@@ -99,22 +99,22 @@ export default function ExportCsvButton({ subjectId, subjectName }: { subjectId:
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1">
+      <div className="space-y-1 flex-1 min-w-[130px]">
         <Label className="text-xs text-muted-foreground">From</Label>
         <Input
           type="date"
           value={from}
           onChange={(e) => setFrom(e.target.value)}
-          className="h-9 w-[150px] text-sm"
+          className="h-9 w-full text-sm"
         />
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 flex-1 min-w-[130px]">
         <Label className="text-xs text-muted-foreground">To</Label>
         <Input
           type="date"
           value={to}
           onChange={(e) => setTo(e.target.value)}
-          className="h-9 w-[150px] text-sm"
+          className="h-9 w-full text-sm"
         />
       </div>
       <Button

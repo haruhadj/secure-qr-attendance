@@ -30,13 +30,13 @@ export default function Navbar({ role }: { role: string }) {
   if (pathname === "/") return null;
 
   const teacherLinks = [
-    { href: "/teacher/scanner", label: "QR Scanner", icon: ScanLine },
-    { href: "/teacher/roster", label: "Class Roster", icon: ClipboardList },
+    { href: "/teacher/scanner", label: "Scanner", icon: ScanLine },
+    { href: "/teacher/roster", label: "Roster", icon: ClipboardList },
     { href: "/teacher/appeals", label: "Appeals", icon: FileWarning },
   ];
 
   const studentLinks = [
-    { href: "/student/dashboard", label: "My QR ID", icon: QrCode },
+    { href: "/student/dashboard", label: "My QR", icon: QrCode },
     { href: "/student/appeals", label: "Appeals", icon: FileWarning },
   ];
 
@@ -44,7 +44,7 @@ export default function Navbar({ role }: { role: string }) {
     { href: "/admin/dashboard", label: "Dashboard", icon: Activity },
     { href: "/admin/staff", label: "Staff", icon: Briefcase },
     { href: "/admin/masterlist", label: "Masterlist", icon: Users },
-    { href: "/admin/audit", label: "Audit Logs", icon: History },
+    { href: "/admin/audit", label: "Audit", icon: History },
   ];
 
   const links = role === "TEACHER" ? teacherLinks : role === "ADMIN" ? adminLinks : studentLinks;
@@ -95,28 +95,28 @@ export default function Navbar({ role }: { role: string }) {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border safe-bottom">
-        <div className="flex items-center justify-around h-16 px-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border overflow-hidden">
+        <div className="flex items-center h-16">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-xl transition-colors",
+                "flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 rounded-xl transition-colors",
                 pathname === link.href
                   ? "text-primary"
                   : "text-muted-foreground"
               )}
             >
-              <link.icon className={cn("w-5 h-5", pathname === link.href && "drop-shadow-sm")} />
-              <span className="text-[10px] font-medium leading-none">{link.label}</span>
+              <link.icon className={cn("w-5 h-5 shrink-0", pathname === link.href && "drop-shadow-sm")} />
+              <span className="text-[10px] font-medium leading-none truncate w-full text-center px-1">{link.label}</span>
             </Link>
           ))}
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-xl text-muted-foreground hover:text-destructive transition-colors"
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 rounded-xl text-muted-foreground hover:text-destructive transition-colors"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 shrink-0" />
             <span className="text-[10px] font-medium leading-none">Logout</span>
           </button>
         </div>

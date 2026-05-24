@@ -26,7 +26,8 @@ export default function WeeklyStrip() {
   };
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+    <div className="-mx-4 md:mx-0 overflow-hidden">
+    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-4 md:px-0">
       {days.map((day) => {
         const isSelected = isSameDay(day, selectedDate);
         const isToday = isSameDay(day, new Date());
@@ -55,6 +56,7 @@ export default function WeeklyStrip() {
           </button>
         );
       })}
+    </div>
     </div>
   );
 }
