@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { logActivity } from "@/src/lib/audit";
 import { getUTCMidnight } from "@/src/lib/date";
 
-export async function submitAppeal(studentId: string, description: string, imageUrl: string) {
+export async function submitAppeal(studentId: string, description: string) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.STUDENT) {
     throw new Error("Unauthorized");
@@ -18,7 +18,7 @@ export async function submitAppeal(studentId: string, description: string, image
     data: {
       studentId,
       description,
-      imageUrl,
+      imageUrl: "",
       status: "PENDING"
     }
   });

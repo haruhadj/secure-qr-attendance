@@ -4,14 +4,13 @@ import { useState } from "react";
 import { reviewAppeal } from "@/src/app/actions/appeals";
 import { Button } from "@/src/components/ui/button";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Loader2, ImageIcon, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 interface AppealReviewActionsProps {
   appealId: string;
-  imageUrl: string;
 }
 
-export default function AppealReviewActions({ appealId, imageUrl }: AppealReviewActionsProps) {
+export default function AppealReviewActions({ appealId }: AppealReviewActionsProps) {
   const [loading, setLoading] = useState<"APPROVED" | "REJECTED" | null>(null);
 
   const handleReview = async (status: "APPROVED" | "REJECTED") => {
@@ -32,18 +31,6 @@ export default function AppealReviewActions({ appealId, imageUrl }: AppealReview
 
   return (
     <div className="flex items-center gap-2">
-      {imageUrl && imageUrl !== "/uploads/placeholder.jpg" && (
-        <a
-          href={imageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-        >
-          <ImageIcon className="w-3 h-3" />
-          Proof
-          <ExternalLink className="w-2.5 h-2.5" />
-        </a>
-      )}
       <Button
         size="sm"
         variant="ghost"

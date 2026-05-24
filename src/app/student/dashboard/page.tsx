@@ -196,7 +196,7 @@ export default async function StudentDashboard() {
                   {student.qrToken.slice(0, 8)}...
                 </code>
                 <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/50">
-                  REFRESHES DAILY
+                  PERSONAL QR TOKEN
                 </p>
               </div>
             </CardContent>

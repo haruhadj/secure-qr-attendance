@@ -41,7 +41,7 @@ export default async function StudentAppeals() {
               Attendance Appeals
             </h1>
             <p className="text-muted-foreground">
-              Submit proof for missed attendance or status corrections
+              Submit a written reason for missed attendance or status corrections
             </p>
           </div>
           <Badge variant="outline" className="bg-background">
@@ -54,7 +54,7 @@ export default async function StudentAppeals() {
             <CardHeader>
               <CardTitle>Submit Appeal</CardTitle>
               <CardDescription>
-                Upload a photo of your medical certificate or reason for absence
+                Describe your reason for absence. Your teacher will review it.
               </CardDescription>
             </CardHeader>
             <CardContent>

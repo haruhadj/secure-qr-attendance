@@ -133,7 +133,7 @@ export default async function TeacherAppeals() {
                         Submitted: {formatDateTime(appeal.createdAt)}
                       </p>
                     </div>
-                    <AppealReviewActions appealId={appeal.id} imageUrl={appeal.imageUrl} />
+                    <AppealReviewActions appealId={appeal.id} />
                   </div>
                 ))}
               </div>
