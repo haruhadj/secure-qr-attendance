@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { prisma } from "@/src/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
@@ -10,56 +5,66 @@ import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
 import RosterTable from "@/src/components/RosterTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Users, User } from "lucide-react";
+import { Users, User, BookOpen, Calendar } from "lucide-react";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 import ExportCsvButton from "@/src/components/ExportCsvButton";
+import SubjectSelector from "@/src/components/SubjectSelector";
+import { format } from "date-fns";
 
 export default async function TeacherRoster({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; subjectId?: string }>;
 }) {
   const session = await getServerSession(authOptions);
-  const { date: dateStr } = await searchParams;
-  
+  const { date: dateStr, subjectId: subjectIdParam } = await searchParams;
+
   if (!session || (session.user as any).role !== UserRole.TEACHER) {
     redirect("/");
   }
 
   const selectedDate = dateStr ? parseUTCDate(dateStr) : getUTCMidnight();
 
-  // Find the teacher's section
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
-    include: { sections: true }
+    include: { subjects: true },
   });
 
-  if (!teacher || teacher.sections.length === 0) {
-    return <div>No sections assigned.</div>;
+  if (!teacher || teacher.subjects.length === 0) {
+    return (
+      <div className="min-h-screen bg-background p-4 md:p-8 flex items-center justify-center">
+        <p className="text-muted-foreground">No subjects assigned to your account yet.</p>
+      </div>
+    );
   }
 
-  const section = teacher.sections[0];
+  const subject = subjectIdParam
+    ? teacher.subjects.find((s) => s.id === subjectIdParam) ?? teacher.subjects[0]
+    : teacher.subjects[0];
+
   const nextDay = new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
 
-  const students = await prisma.student.findMany({
-    where: { sectionId: section.id },
+  const enrollments = await prisma.studentSubject.findMany({
+    where: { subjectId: subject.id },
     include: {
-      user: true,
-      attendances: {
-        where: {
-          date: {
-            gte: selectedDate,
-            lt: nextDay
+      student: {
+        include: {
+          user: true,
+          attendances: {
+            where: { date: { gte: selectedDate, lt: nextDay }, subjectId: subject.id },
           },
-          sectionId: section.id
-        }
-      }
-    }
+        },
+      },
+    },
+    orderBy: { student: { studentId: "asc" } },
   });
+
+  const students = enrollments.map((e) => e.student);
+  const todayLabel = format(new Date(), "EEEE, MMMM d, yyyy");
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -72,22 +77,32 @@ export default async function TeacherRoster({
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-muted-foreground">
               <p className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="font-medium text-foreground">{subject.code} — {subject.name}</span>
+              </p>
+              <span className="hidden sm:inline text-muted-foreground/30">•</span>
+              <p className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                {session.user?.name || "Unknown"}
+              </p>
+              <span className="hidden sm:inline text-muted-foreground/30">•</span>
+              <p className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                {section.name}
-              </p>
-              <span className="hidden sm:inline text-muted-foreground/30">•</span>
-              <p className="flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                Instructor: <span className="font-medium text-foreground">{session.user?.name || "Unknown"}</span>
-              </p>
-              <span className="hidden sm:inline text-muted-foreground/30">•</span>
-              <p className="flex items-center gap-2">
                 {students.length} Students
+              </p>
+              <span className="hidden sm:inline text-muted-foreground/30">•</span>
+              <p className="flex items-center gap-2 text-primary font-medium">
+                <Calendar className="w-4 h-4" />
+                {todayLabel}
               </p>
             </div>
           </div>
           <DatePicker />
         </div>
+
+        {teacher.subjects.length > 1 && (
+          <SubjectSelector subjects={teacher.subjects} selectedSubjectId={subject.id} />
+        )}
 
         <WeeklyStrip />
 
@@ -97,22 +112,24 @@ export default async function TeacherRoster({
               <div>
                 <CardTitle>Attendance Monitoring</CardTitle>
                 <CardDescription>
-                  Manual override enabled. Changes sync automatically after 5 seconds.
+                  {subject.scheduleDay && subject.scheduleTime
+                    ? `${subject.scheduleDay} · ${subject.scheduleTime} · Manual override enabled.`
+                    : "Manual override enabled. Changes sync automatically after 5 seconds."}
                 </CardDescription>
               </div>
-              <ExportCsvButton sectionId={section.id} sectionName={section.name} />
+              <ExportCsvButton subjectId={subject.id} subjectName={`${subject.code}-${subject.name}`} />
             </div>
           </CardHeader>
           <CardContent>
-            <RosterTable 
-              students={students.map(s => ({
+            <RosterTable
+              students={students.map((s) => ({
                 id: s.id,
                 studentId: s.studentId,
                 name: s.user.name || "Unknown",
                 status: s.attendances[0]?.status || null,
-                sectionId: section.id,
-                attendanceTime: s.attendances[0]?.updatedAt?.toISOString() || null
-              }))} 
+                subjectId: subject.id,
+                attendanceTime: s.attendances[0]?.updatedAt?.toISOString() || null,
+              }))}
               selectedDateISO={selectedDate.toISOString()}
             />
           </CardContent>

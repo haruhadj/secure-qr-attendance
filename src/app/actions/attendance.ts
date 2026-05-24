@@ -11,7 +11,7 @@ import { getUTCMidnight } from "@/src/lib/date";
 
 export async function updateAttendance(
   studentId: string,
-  sectionId: string,
+  subjectId: string,
   newStatus: AttendanceStatus,
   oldStatus?: AttendanceStatus,
   customDate?: Date
@@ -27,38 +27,28 @@ export async function updateAttendance(
   const setting = await prisma.systemSetting.findUnique({
     where: { key: "attendance_lock_hours" },
   });
-  // Default to 24 hours if not set
   const lockHours = setting ? parseInt(setting.value, 10) : 24;
 
   const now = new Date();
   const diffInHours = (now.getTime() - targetDate.getTime()) / (1000 * 60 * 60);
-  
-  // Allow admins to bypass lock, or if it's within the lock period
-  // 0 means unlimited
+
   if ((session.user as any).role !== UserRole.ADMIN && lockHours > 0 && diffInHours > lockHours) {
     const days = Math.floor(lockHours / 24);
     const hours = lockHours % 24;
-    
     let timeStr = "";
-    if (days > 0) {
-      timeStr += `${days} day${days > 1 ? "s" : ""}`;
-    }
-    if (hours > 0) {
-      if (timeStr) timeStr += " and ";
-      timeStr += `${hours} hour${hours > 1 ? "s" : ""}`;
-    }
-    if (!timeStr) timeStr = "0 hours"; // Should not happen if lockHours > 0
-
+    if (days > 0) timeStr += `${days} day${days > 1 ? "s" : ""}`;
+    if (hours > 0) { if (timeStr) timeStr += " and "; timeStr += `${hours} hour${hours > 1 ? "s" : ""}`; }
+    if (!timeStr) timeStr = "0 hours";
     return { error: `Edits are locked for attendance older than ${timeStr}.` };
   }
 
   const result = await prisma.$transaction(async (tx) => {
     const attendance = await tx.attendance.upsert({
       where: {
-        studentId_date_sectionId: {
+        studentId_date_subjectId: {
           studentId,
           date: targetDate,
-          sectionId,
+          subjectId,
         },
       },
       update: {
@@ -68,7 +58,7 @@ export async function updateAttendance(
       create: {
         studentId,
         date: targetDate,
-        sectionId,
+        subjectId,
         status: newStatus,
       },
     });
@@ -88,10 +78,10 @@ export async function updateAttendance(
 
   await logActivity("ATTENDANCE_EDIT", `Updated attendance status for student ${studentId}`, {
     studentId,
-    sectionId,
+    subjectId,
     oldStatus,
     newStatus,
-    date: targetDate
+    date: targetDate,
   });
 
   revalidatePath("/teacher/roster");
@@ -100,10 +90,7 @@ export async function updateAttendance(
   return { success: true, data: result };
 }
 
-// ... (skipping getAuditLogs)
-
-export async function scanQrAttendance(qrToken: string, sectionId: string) {
-  // ... (authorization logic)
+export async function scanQrAttendance(qrToken: string, subjectId: string) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.TEACHER) {
     throw new Error("Unauthorized — only teachers can scan.");
@@ -112,45 +99,51 @@ export async function scanQrAttendance(qrToken: string, sectionId: string) {
   // 1. Find student by qrToken
   const student = await prisma.student.findUnique({
     where: { qrToken },
-    include: {
-      user: true,
-      section: { include: { teacher: true } },
-    },
+    include: { user: true },
   });
 
   if (!student) {
     return { success: false, message: "Invalid QR code — student not found." };
   }
 
-  if (!student.section) {
-    return { success: false, message: `${student.user.name} has no assigned section.` };
-  }
-
-  if (student.sectionId !== sectionId) {
-    return { success: false, message: `${student.user.name} does not belong to the selected section.` };
-  }
-
-  // 2. Verify teacher owns this section
+  // 2. Verify subject exists and belongs to this teacher
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
   });
 
-  if (!teacher || student.section.teacherId !== teacher.id) {
+  const subject = await prisma.subject.findUnique({
+    where: { id: subjectId },
+  });
+
+  if (!subject) {
+    return { success: false, message: "Subject not found." };
+  }
+
+  if (!teacher || subject.teacherId !== teacher.id) {
+    return { success: false, message: `You are not the teacher for ${subject.name}.` };
+  }
+
+  // 3. Verify student is enrolled in this subject
+  const enrollment = await prisma.studentSubject.findUnique({
+    where: { studentId_subjectId: { studentId: student.id, subjectId } },
+  });
+
+  if (!enrollment) {
     return {
       success: false,
-      message: `${student.user.name} is not in your section (${student.section.name}).`,
+      message: `${student.user.name} is not enrolled in ${subject.name}.`,
     };
   }
 
-  // 3. Check if already marked today
+  // 4. Check if already marked today
   const today = getUTCMidnight();
 
   const existing = await prisma.attendance.findUnique({
     where: {
-      studentId_date_sectionId: {
+      studentId_date_subjectId: {
         studentId: student.id,
         date: today,
-        sectionId: student.section.id,
+        subjectId,
       },
     },
   });
@@ -163,23 +156,23 @@ export async function scanQrAttendance(qrToken: string, sectionId: string) {
     };
   }
 
-  // 4. Mark as PRESENT via transaction + audit log
+  // 5. Mark as PRESENT via transaction + audit log
   const oldStatus = existing?.status || null;
 
   await prisma.$transaction(async (tx) => {
     const attendance = await tx.attendance.upsert({
       where: {
-        studentId_date_sectionId: {
+        studentId_date_subjectId: {
           studentId: student.id,
           date: today,
-          sectionId: student.section!.id,
+          subjectId,
         },
       },
       update: { status: "PRESENT", updatedAt: new Date() },
       create: {
         studentId: student.id,
         date: today,
-        sectionId: student.section!.id,
+        subjectId,
         status: "PRESENT",
       },
     });
@@ -199,8 +192,8 @@ export async function scanQrAttendance(qrToken: string, sectionId: string) {
   await logActivity("ATTENDANCE_SCAN", `QR Scan: ${student.user.name} marked PRESENT`, {
     studentId: student.id,
     studentName: student.user.name,
-    sectionId: student.section!.id,
-    sectionName: student.section!.name
+    subjectId,
+    subjectName: subject.name,
   });
 
   revalidatePath("/teacher/roster");

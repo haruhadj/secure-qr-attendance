@@ -2,46 +2,40 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
-import { getSectionMasterlist } from "@/src/app/actions/masterlist";
+import { getSubjectMasterlist } from "@/src/app/actions/masterlist";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/src/components/ui/table";
 import {
-  AddStudentForm,
   RemoveStudentButton,
   EditStudentModal,
   ViewQrModal,
   EditAttendanceModal,
   DeleteAttendanceButton,
 } from "@/src/components/MasterlistForms";
-import { Users, GraduationCap, ChevronLeft, Calendar } from "lucide-react";
+import { BookOpen, GraduationCap, ChevronLeft, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate, formatTime, formatDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ExportCsvButton from "@/src/components/ExportCsvButton";
+import { prisma } from "@/src/lib/prisma";
 
-export default async function SectionMasterlist({ 
+export default async function SubjectMasterlist({
   params,
   searchParams,
-}: { 
-  params: Promise<{ sectionId: string }>;
+}: {
+  params: Promise<{ subjectId: string }>;
   searchParams: Promise<{ date?: string }>;
 }) {
   const resolvedParams = await params;
-  const sectionId = resolvedParams.sectionId;
+  const subjectId = resolvedParams.subjectId;
   const { date: dateStr } = await searchParams;
-  
-  const session = await getServerSession(authOptions);
 
+  const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
     redirect("/");
   }
@@ -50,12 +44,13 @@ export default async function SectionMasterlist({
 
   let data;
   try {
-    data = await getSectionMasterlist(sectionId, selectedDate);
-  } catch (error) {
+    data = await getSubjectMasterlist(subjectId, selectedDate);
+  } catch {
     redirect("/admin/masterlist");
   }
 
-  const { section, students, sections } = data;
+  const { subject, students } = data;
+  const sections = await prisma.section.findMany({ orderBy: { name: "asc" } });
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -70,31 +65,34 @@ export default async function SectionMasterlist({
               </Link>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3 font-sans">
-              <Users className="w-8 h-8 text-primary" />
-              {section.name}
+              <BookOpen className="w-8 h-8 text-primary" />
+              <span className="font-mono text-primary">{subject.code}</span>
+              <span className="text-foreground">{subject.name}</span>
             </h1>
-            <p className="text-muted-foreground">
-              Teacher: {section.teacher?.user?.name || "Unassigned"}
-            </p>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <span>Teacher: <span className="font-medium text-foreground">{subject.teacher?.user?.name || "Unassigned"}</span></span>
+              {subject.scheduleDay && (
+                <>
+                  <span className="text-muted-foreground/30">•</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {subject.scheduleDay}{subject.scheduleTime ? ` · ${subject.scheduleTime}` : ""}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
           <div className="flex flex-col md:items-end gap-3">
             <DatePicker />
             <Badge variant="outline" className="bg-card py-1.5 px-3 gap-2">
               <GraduationCap className="w-4 h-4" />
-              {students.length} Students
+              {students.length} Enrolled
             </Badge>
           </div>
         </header>
 
         <WeeklyStrip />
 
-        {/* Add Student Form */}
-        <AddStudentForm 
-          sections={sections.map((s) => ({ id: s.id, name: s.name }))} 
-          initialSectionId={sectionId}
-        />
-
-        {/* Student Table */}
         <Card className="border-none shadow-xl shadow-border/5">
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -104,10 +102,10 @@ export default async function SectionMasterlist({
                   Attendance for {formatDate(selectedDate)}
                 </CardTitle>
                 <CardDescription>
-                  Roster and status for the selected date
+                  Enrolled roster and attendance status for the selected date
                 </CardDescription>
               </div>
-              {/* Export is per-subject; use subject detail page for per-subject export */}
+              <ExportCsvButton subjectId={subjectId} subjectName={`${subject.code}-${subject.name}`} />
             </div>
           </CardHeader>
           <CardContent>
@@ -119,7 +117,7 @@ export default async function SectionMasterlist({
                   <TableHead>Email</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
                   <TableHead className="w-[80px]">Time</TableHead>
-                  <TableHead className="w-[60px]"></TableHead>
+                  <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,7 +158,21 @@ export default async function SectionMasterlist({
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          {/* Attendance edit/delete is per-subject — handled on subject detail page */}
+                          <EditAttendanceModal
+                            studentDbId={student.id}
+                            studentName={student.user.name || "Unknown"}
+                            subjectId={subjectId}
+                            selectedDate={selectedDate}
+                            currentStatus={attendance?.status || null}
+                            currentTime={attendance?.updatedAt || null}
+                          />
+                          <DeleteAttendanceButton
+                            studentDbId={student.id}
+                            studentName={student.user.name || "Unknown"}
+                            subjectId={subjectId}
+                            selectedDate={selectedDate}
+                            hasAttendance={!!attendance}
+                          />
                           <ViewQrModal
                             studentName={student.user.name || "Unknown"}
                             qrToken={student.qrToken}
@@ -181,7 +193,7 @@ export default async function SectionMasterlist({
                 {students.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
-                      No students in this section yet.
+                      No students enrolled in this subject yet.
                     </TableCell>
                   </TableRow>
                 )}

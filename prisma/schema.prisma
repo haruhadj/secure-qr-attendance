@@ -63,27 +63,51 @@ model Teacher {
   userId    String    @unique
   user      User      @relation(fields: [userId], references: [id])
   sections  Section[]
+  subjects  Subject[]
 }
 
 model Student {
-  id           String       @id @default(cuid())
-  studentId    String       @unique // e.g., 2022-0001
-  qrToken      String       @unique @default(uuid())
-  userId       String       @unique
-  user         User         @relation(fields: [userId], references: [id])
-  sectionId    String?
-  section      Section?     @relation(fields: [sectionId], references: [id])
-  attendances  Attendance[]
-  appeals      Appeal[]
+  id              String           @id @default(cuid())
+  studentId       String           @unique // e.g., 2022-0001
+  qrToken         String           @unique @default(uuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id])
+  sectionId       String?
+  section         Section?         @relation(fields: [sectionId], references: [id])
+  attendances     Attendance[]
+  appeals         Appeal[]
+  enrolledSubjects StudentSubject[]
 }
 
 model Section {
   id         String    @id @default(cuid())
-  name       String    @unique // e.g., STEM-A
+  name       String    @unique // e.g., BSCS 3rd Year
   teacherId  String?
   teacher    Teacher?  @relation(fields: [teacherId], references: [id])
   students   Student[]
-  schedules  Attendance[]
+}
+
+model Subject {
+  id            String           @id @default(cuid())
+  code          String           @unique // e.g., OS101
+  name          String           // e.g., Operating Systems
+  units         Int?
+  scheduleDay   String?          // e.g., MWF
+  scheduleTime  String?          // e.g., 08:00-09:30
+  teacherId     String?
+  teacher       Teacher?         @relation(fields: [teacherId], references: [id])
+  enrollments   StudentSubject[]
+  attendances   Attendance[]
+}
+
+model StudentSubject {
+  id        String   @id @default(cuid())
+  studentId String
+  subjectId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+
+  @@unique([studentId, subjectId])
 }
 
 enum AttendanceStatus {
@@ -98,11 +122,11 @@ model Attendance {
   status    AttendanceStatus
   studentId String
   student   Student          @relation(fields: [studentId], references: [id])
-  sectionId String
-  section   Section          @relation(fields: [sectionId], references: [id])
+  subjectId String
+  subject   Subject          @relation(fields: [subjectId], references: [id])
   updatedAt DateTime         @updatedAt
 
-  @@unique([studentId, date, sectionId])
+  @@unique([studentId, date, subjectId])
 }
 
 model AttendanceAudit {

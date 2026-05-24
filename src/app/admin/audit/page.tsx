@@ -52,7 +52,7 @@ export default async function AdminAudit({
   const attendanceIds = Array.from(new Set(audits.map(a => a.attendanceId)));
   const attendances = await prisma.attendance.findMany({
     where: { id: { in: attendanceIds } },
-    include: { student: { include: { user: true } }, section: true },
+    include: { student: { include: { user: true } }, subject: true },
   });
   const attendanceMap = attendances.reduce((acc, a) => ({ ...acc, [a.id]: a }), {} as any);
 
@@ -88,7 +88,7 @@ export default async function AdminAudit({
                 <TableRow>
                   <TableHead>Timestamp</TableHead>
                   <TableHead>Student</TableHead>
-                  <TableHead>Section</TableHead>
+                  <TableHead>Subject</TableHead>
                   <TableHead>Changed By</TableHead>
                   <TableHead>Status Change</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -109,7 +109,7 @@ export default async function AdminAudit({
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {attendance?.section?.name || <span className="text-muted-foreground/40 italic">—</span>}
+                      {attendance?.subject?.name || <span className="text-muted-foreground/40 italic">—</span>}
                     </TableCell>
                     <TableCell className="font-medium text-sm">
                       {userMap[audit.changedBy] || "System"}

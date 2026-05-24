@@ -99,7 +99,25 @@ The **Secure QR Attendance System** streamlines the attendance process using a "
 
 ---
 
-## 🛡️ Security & Patterns
+## � Default Passwords
+
+These are the **initial** passwords assigned at setup or when accounts are created/reset. Users should change these after first login.
+
+| User Type | Default Password | Notes |
+|---|---|---|
+| **Admin** | `password123` | Set on seed & when admin password is reset via Staff Management |
+| **Teacher** | `teacher123` | Set when adding a teacher via Staff Management or resetting their password |
+| **Student** | `password123` | Set when importing via CSV masterlist or running the seed script |
+
+> **Important:** The Demo Accounts card on the admin dashboard displays these **initial defaults only** — it does not reflect any passwords changed after setup.
+
+Password rules enforced on change:
+- Minimum **8 characters**
+- Current password must be verified before changing
+
+---
+
+## �🛡️ Security & Patterns
 
 - **Password Hashing**: All passwords are encrypted using `bcryptjs`.
 - **UTC Normalization**: Attendance records use UTC midnight normalization to prevent timezone discrepancies.

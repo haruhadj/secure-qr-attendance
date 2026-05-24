@@ -36,17 +36,22 @@ export async function getTeacherAppeals() {
 
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
-    include: { sections: true },
+    include: { subjects: true },
   });
 
-  if (!teacher || teacher.sections.length === 0) return [];
+  if (!teacher || teacher.subjects.length === 0) return [];
 
-  const sectionIds = teacher.sections.map((s) => s.id);
+  const subjectIds = teacher.subjects.map((s) => s.id);
+
+  // Find all students enrolled in this teacher's subjects
+  const enrollments = await prisma.studentSubject.findMany({
+    where: { subjectId: { in: subjectIds } },
+    select: { studentId: true },
+  });
+  const studentDbIds = Array.from(new Set(enrollments.map((e) => e.studentId)));
 
   return prisma.appeal.findMany({
-    where: {
-      student: { sectionId: { in: sectionIds } },
-    },
+    where: { studentId: { in: studentDbIds } },
     include: {
       student: {
         include: { user: true, section: true },
@@ -90,25 +95,32 @@ export async function reviewAppeal(appealId: string, status: "APPROVED" | "REJEC
       where: { id: appeal.studentId },
     });
 
-    if (student?.sectionId) {
+    if (student) {
       const today = getUTCMidnight();
 
-      await prisma.attendance.upsert({
-        where: {
-          studentId_date_sectionId: {
+      // Find the first subject this student is enrolled in to mark attendance
+      const enrollment = await prisma.studentSubject.findFirst({
+        where: { studentId: student.id },
+      });
+
+      if (enrollment) {
+        await prisma.attendance.upsert({
+          where: {
+            studentId_date_subjectId: {
+              studentId: student.id,
+              date: today,
+              subjectId: enrollment.subjectId,
+            },
+          },
+          update: { status: "PRESENT", updatedAt: new Date() },
+          create: {
             studentId: student.id,
             date: today,
-            sectionId: student.sectionId,
+            subjectId: enrollment.subjectId,
+            status: "PRESENT",
           },
-        },
-        update: { status: "PRESENT", updatedAt: new Date() },
-        create: {
-          studentId: student.id,
-          date: today,
-          sectionId: student.sectionId,
-          status: "PRESENT",
-        },
-      });
+        });
+      }
     }
   }
 

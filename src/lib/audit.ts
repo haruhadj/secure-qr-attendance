@@ -22,6 +22,9 @@ export type ActivityType =
   | "SECTION_ADD" 
   | "SECTION_REMOVE" 
   | "SECTION_UPDATE" 
+  | "SUBJECT_ADD"
+  | "SUBJECT_REMOVE"
+  | "SUBJECT_UPDATE"
   | "SETTING_UPDATE" 
   | "APPEAL_REVIEW"
   | "MASTERLIST_IMPORT";

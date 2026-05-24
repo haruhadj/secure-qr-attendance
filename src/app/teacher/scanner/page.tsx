@@ -18,19 +18,18 @@ export default async function TeacherScanner() {
     redirect("/");
   }
 
-  // Get section info for display
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
     include: {
-      sections: {
+      subjects: {
         include: {
-          _count: { select: { students: true } },
+          _count: { select: { enrollments: true } },
         },
       },
     },
   });
 
-  const sections = teacher?.sections || [];
+  const subjects = teacher?.subjects || [];
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -43,14 +42,14 @@ export default async function TeacherScanner() {
             </h1>
             <p className="text-muted-foreground flex items-center gap-2">
               <Users className="w-4 h-4" />
-              {sections.length > 0
+              {subjects.length > 0
                 ? "Scan student QR codes for attendance"
-                : "No sections assigned"}
+                : "No subjects assigned"}
             </p>
           </div>
         </div>
 
-        <QrScanner sections={sections} />
+        <QrScanner subjects={subjects} />
       </div>
     </div>
   );

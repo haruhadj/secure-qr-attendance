@@ -67,7 +67,7 @@ export default async function AdminStaffManagement() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Sections Assigned</TableHead>
+                  <TableHead>Subjects / Adviser</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -96,17 +96,21 @@ export default async function AdminStaffManagement() {
                     </TableCell>
                     <TableCell>
                       {user.role === UserRole.TEACHER && user.teacher ? (
-                        user.teacher.sections.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {user.teacher.sections.map((s) => (
-                              <Badge key={s.id} variant="outline" className="text-[10px]">
-                                {s.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/50">None</span>
-                        )
+                        <div className="flex flex-wrap gap-1">
+                          {user.teacher.subjects.map((s) => (
+                            <Badge key={s.id} variant="outline" className="text-[10px] font-mono">
+                              {s.code}
+                            </Badge>
+                          ))}
+                          {user.teacher.sections.map((s) => (
+                            <Badge key={s.id} className="text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/20">
+                              {s.name}
+                            </Badge>
+                          ))}
+                          {user.teacher.subjects.length === 0 && user.teacher.sections.length === 0 && (
+                            <span className="text-xs text-muted-foreground/50">None</span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground/30">—</span>
                       )}

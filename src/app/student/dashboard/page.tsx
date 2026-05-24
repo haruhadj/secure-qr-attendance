@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/ta
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { Badge } from "@/src/components/ui/badge";
-import { QrCode, IdCard, Image as ImageIcon, History, CheckCircle2, XCircle, Clock, ArrowRight, Calendar, User, Mail, BookOpen, Hash } from "lucide-react";
+import { IdCard, History, CheckCircle2, XCircle, Clock, ArrowRight, Calendar, User, Mail, BookOpen, Hash, GraduationCap } from "lucide-react";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import { format, isToday, isYesterday } from "date-fns";
 import AttendanceCalendar from "@/src/components/AttendanceCalendar";
@@ -32,19 +32,25 @@ export default async function StudentDashboard() {
       user: true,
       section: {
         include: {
-          teacher: {
-            include: { user: true }
-          }
-        }
+          teacher: { include: { user: true } },
+        },
+      },
+      enrolledSubjects: {
+        include: {
+          subject: {
+            include: { teacher: { include: { user: true } } },
+          },
+        },
+        orderBy: { subject: { code: 'asc' } },
       },
       attendances: {
         orderBy: { date: 'desc' },
-        include: {
-          section: true
-        }
-      }
-    }
+        include: { subject: true },
+      },
+    },
   });
+
+  const todayLabel = format(new Date(), "EEEE, MMMM d, yyyy");
 
   if (!student) {
     return <div>Student record not found.</div>;
@@ -76,6 +82,7 @@ export default async function StudentDashboard() {
                   {student.user.name || "Student"}
                 </h1>
                 <p className="text-primary-foreground/70 text-sm">Student Dashboard</p>
+                <p className="text-primary-foreground/60 text-xs font-medium">{todayLabel}</p>
               </div>
               <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs">
                 {attendanceRate}% Attendance
@@ -118,6 +125,26 @@ export default async function StudentDashboard() {
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Adviser</p>
                   <p className="text-sm font-medium text-foreground truncate">{student.section?.teacher?.user?.name || "No adviser"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Enrolled Subjects</p>
+                  {student.enrolledSubjects.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {student.enrolledSubjects.map((es) => (
+                        <span key={es.subject.id} className="inline-flex items-center gap-1 text-xs bg-primary/5 border border-primary/10 rounded-md px-2 py-0.5" title={`${es.subject.name} — ${es.subject.teacher?.user?.name || 'No teacher'}`}>
+                          <span className="font-mono font-bold text-primary">{es.subject.code}</span>
+                          <span className="text-muted-foreground hidden sm:inline">{es.subject.name}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No subjects enrolled</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -225,7 +252,7 @@ export default async function StudentDashboard() {
                               <span>•</span>
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
-                                {att.section.name}
+                                {att.subject.code} — {att.subject.name}
                               </span>
                             </div>
                           </div>

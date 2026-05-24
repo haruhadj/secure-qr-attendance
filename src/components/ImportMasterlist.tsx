@@ -14,11 +14,9 @@ import {
   CheckCircle2,
   Loader2,
   X,
-  Users,
   FolderOpen,
   GraduationCap,
-  ChevronDown,
-  ChevronUp,
+  BookOpen,
   RefreshCw,
 } from "lucide-react";
 
@@ -30,7 +28,7 @@ export function ImportMasterlist() {
   const [parsed, setParsed] = useState<ParsedMasterlist | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState("");
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [expandTab, setExpandTab] = useState<"sections" | "subjects" | "students">("sections");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
@@ -38,7 +36,6 @@ export function ImportMasterlist() {
     setParsed(null);
     setResult(null);
     setFileName("");
-    setExpandedSections(new Set());
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -77,7 +74,7 @@ export function ImportMasterlist() {
 
     setStage("importing");
     try {
-      const importResult = await importMasterlist(parsed.sections);
+      const importResult = await importMasterlist(parsed);
       setResult(importResult);
       setStage("done");
 
@@ -90,15 +87,6 @@ export function ImportMasterlist() {
       toast.error("Import failed. Please try again.");
       setStage("preview");
     }
-  };
-
-  const toggleSection = (name: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
   };
 
   if (!open) {
@@ -174,12 +162,12 @@ export function ImportMasterlist() {
                   {parsed.sections.length} Section{parsed.sections.length !== 1 ? "s" : ""}
                 </Badge>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 py-1">
-                  <GraduationCap className="w-3.5 h-3.5" />
-                  {parsed.totalStudents} Student{parsed.totalStudents !== 1 ? "s" : ""}
+                  <BookOpen className="w-3.5 h-3.5" />
+                  {parsed.subjects.length} Subject{parsed.subjects.length !== 1 ? "s" : ""}
                 </Badge>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 py-1">
-                  <Users className="w-3.5 h-3.5" />
-                  {new Set(parsed.sections.map((s) => s.teacherEmail)).size} Teacher{parsed.sections.length !== 1 ? "s" : ""}
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  {parsed.totalStudents} Student{parsed.totalStudents !== 1 ? "s" : ""}
                 </Badge>
                 {parsed.errors.length > 0 && (
                   <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 gap-1.5 py-1">
@@ -204,46 +192,72 @@ export function ImportMasterlist() {
                 </div>
               )}
 
-              {/* Section Preview */}
-              {parsed.sections.map((section) => (
-                <div key={section.sectionName} className="border border-border rounded-lg overflow-hidden">
+              {/* Tab switcher */}
+              <div className="flex gap-1 border-b border-border">
+                {(["sections", "subjects", "students"] as const).map((t) => (
                   <button
-                    onClick={() => toggleSection(section.sectionName)}
-                    className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors text-left"
+                    key={t}
+                    onClick={() => setExpandTab(t)}
+                    className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors border-b-2 -mb-px ${
+                      expandTab === t
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{section.sectionName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Teacher: {section.teacherName} · {section.students.length} student{section.students.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    {expandedSections.has(section.sectionName) ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
+                    {t} ({t === "sections" ? parsed.sections.length : t === "subjects" ? parsed.subjects.length : parsed.totalStudents})
                   </button>
-                  {expandedSections.has(section.sectionName) && (
-                    <div className="p-3 space-y-1">
-                      <div className="grid grid-cols-[1fr_2fr_2fr] gap-1 text-xs font-medium text-muted-foreground pb-1 border-b border-border">
-                        <span>ID</span>
-                        <span>Name</span>
-                        <span>Email</span>
-                      </div>
-                      {section.students.map((student) => (
-                        <div
-                          key={student.studentId}
-                          className="grid grid-cols-[1fr_2fr_2fr] gap-1 text-xs text-foreground py-1"
-                        >
-                          <span className="font-mono">{student.studentId}</span>
-                          <span>{student.studentName}</span>
-                          <span className="text-muted-foreground truncate">{student.studentEmail}</span>
-                        </div>
-                      ))}
+                ))}
+              </div>
+
+              {/* Sections preview */}
+              {expandTab === "sections" && (
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[2fr_2fr_2fr] gap-1 text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 border-b border-border">
+                    <span>Section</span><span>Adviser</span><span>Email</span>
+                  </div>
+                  {parsed.sections.map((s) => (
+                    <div key={s.sectionName} className="grid grid-cols-[2fr_2fr_2fr] gap-1 text-xs px-3 py-2 border-b border-border/50 last:border-0">
+                      <span className="font-medium text-foreground">{s.sectionName}</span>
+                      <span className="text-muted-foreground">{s.adviserName}</span>
+                      <span className="text-muted-foreground truncate">{s.adviserEmail}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Subjects preview */}
+              {expandTab === "subjects" && (
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 border-b border-border">
+                    <span>Code</span><span>Name</span><span>Teacher</span><span>Schedule</span>
+                  </div>
+                  {parsed.subjects.map((s) => (
+                    <div key={s.code} className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs px-3 py-2 border-b border-border/50 last:border-0">
+                      <span className="font-mono font-bold text-primary">{s.code}</span>
+                      <span className="text-foreground">{s.name}</span>
+                      <span className="text-muted-foreground">{s.teacherName}</span>
+                      <span className="text-muted-foreground">{s.scheduleDay ?? "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Students preview */}
+              {expandTab === "students" && (
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 border-b border-border">
+                    <span>ID</span><span>Name</span><span>Email</span><span>Subjects</span>
+                  </div>
+                  {parsed.students.map((s) => (
+                    <div key={s.studentId} className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs px-3 py-2 border-b border-border/50 last:border-0">
+                      <span className="font-mono">{s.studentId}</span>
+                      <span className="text-foreground">{s.studentName}</span>
+                      <span className="text-muted-foreground truncate">{s.studentEmail ?? "—"}</span>
+                      <span className="text-muted-foreground">{s.subjectCodes.length}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Confirm Button */}
               {parsed.sections.length > 0 && (

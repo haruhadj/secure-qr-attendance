@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 const DEMO_ACCOUNTS = [
   { role: "Admin",   email: "admin@school.com",   password: "password123", color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
-  { role: "Teacher", email: "teacher@school.com", password: "password123", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
+  { role: "Teacher", email: "teacher@school.com", password: "teacher123",  color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
   { role: "Student", email: "john@student.com",   password: "password123", color: "text-green-500 bg-green-500/10 border-green-500/20" },
 ];
 
@@ -46,7 +46,7 @@ export default function DemoAccountsCard() {
             </div>
             <div>
               <CardTitle className="text-sm text-amber-600">Demo / Test Accounts</CardTitle>
-              <CardDescription className="text-xs">For testing purposes only — visible to admins</CardDescription>
+              <CardDescription className="text-xs">Initial default passwords only — will not reflect changes made after setup</CardDescription>
             </div>
           </div>
           <button

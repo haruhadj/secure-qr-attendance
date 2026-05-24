@@ -1,6 +1,29 @@
-section_name,teacher_name,teacher_email,student_id,student_name,student_email,year_level,school_year
-Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-001,Alice Sterling,alice@student.com,Grade 10,2026-2027
-Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-002,Bob Chen,bob@student.com,Grade 10,2026-2027
-Grade 10 - Newton,Mr. Julian Vance,julian@school.com,2026-003,Carol Davis,,Grade 10,2026-2027
-Grade 11 - Einstein,Ms. Sarah Lopez,sarah@school.com,2026-004,David Kim,david@student.com,Grade 11,2026-2027
-Grade 11 - Einstein,Ms. Sarah Lopez,sarah@school.com,2026-005,Emma Wilson,,Grade 11,2026-2027
+section_name,adviser_name,adviser_email,subject_code,subject_name,subject_teacher_name,subject_teacher_email,subject_units,schedule_day,schedule_time,student_id,student_name,student_email
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-101,Clara Mendoza,clara@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-101,Clara Mendoza,clara@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,DSA203,Data Structures,Dr. Aquino,aquino@school.com,4,MWF,14:00-16:00,2026-101,Clara Mendoza,clara@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-102,David Vance,david@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-102,David Vance,david@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,DSA203,Data Structures,Dr. Aquino,aquino@school.com,4,MWF,14:00-16:00,2026-102,David Vance,david@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-103,Maria Santos,maria@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-103,Maria Santos,maria@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,DSA203,Data Structures,Dr. Aquino,aquino@school.com,4,MWF,14:00-16:00,2026-103,Maria Santos,maria@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-104,James Reyes,james@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-104,James Reyes,james@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,DSA203,Data Structures,Dr. Aquino,aquino@school.com,4,MWF,14:00-16:00,2026-104,James Reyes,james@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-105,Pia Villanueva,pia@student.com
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,DSA203,Data Structures,Dr. Aquino,aquino@school.com,4,MWF,14:00-16:00,2026-105,Pia Villanueva,pia@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,CC401,Capstone Project 1,Prof. Reyes,reyes@school.com,3,MWF,10:00-11:30,2026-201,Anna Lim,anna@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,NET401,Advanced Networking,Engr. Torres,torres@school.com,3,TTh,08:00-09:30,2026-201,Anna Lim,anna@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,SEC402,Information Security,Dr. Cruz,cruz@school.com,3,Fri,13:00-14:30,2026-201,Anna Lim,anna@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,CC401,Capstone Project 1,Prof. Reyes,reyes@school.com,3,MWF,10:00-11:30,2026-202,Ben Torres,ben@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,NET401,Advanced Networking,Engr. Torres,torres@school.com,3,TTh,08:00-09:30,2026-202,Ben Torres,ben@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,SEC402,Information Security,Dr. Cruz,cruz@school.com,3,Fri,13:00-14:30,2026-202,Ben Torres,ben@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,CC401,Capstone Project 1,Prof. Reyes,reyes@school.com,3,MWF,10:00-11:30,2026-203,Carla Diaz,carla@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,NET401,Advanced Networking,Engr. Torres,torres@school.com,3,TTh,08:00-09:30,2026-203,Carla Diaz,carla@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,SEC402,Information Security,Dr. Cruz,cruz@school.com,3,Fri,13:00-14:30,2026-203,Carla Diaz,carla@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,CC401,Capstone Project 1,Prof. Reyes,reyes@school.com,3,MWF,10:00-11:30,2026-204,Rico Navarro,rico@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,SEC402,Information Security,Dr. Cruz,cruz@school.com,3,Fri,13:00-14:30,2026-204,Rico Navarro,rico@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,CC401,Capstone Project 1,Prof. Reyes,reyes@school.com,3,MWF,10:00-11:30,2026-205,Sofia Cruz,sofia@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,NET401,Advanced Networking,Engr. Torres,torres@school.com,3,TTh,08:00-09:30,2026-205,Sofia Cruz,sofia@student.com
+BSCS 4th Year,Mr. Balita,balita@school.com,SEC402,Information Security,Dr. Cruz,cruz@school.com,3,Fri,13:00-14:30,2026-205,Sofia Cruz,sofia@student.com

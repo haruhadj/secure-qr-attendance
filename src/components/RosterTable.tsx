@@ -15,7 +15,7 @@ interface RosterStudent {
   studentId: string;
   name: string;
   status: AttendanceStatus | null;
-  sectionId: string;
+  subjectId: string;
   attendanceTime?: string | null;
 }
 
@@ -34,7 +34,7 @@ export default function RosterTable({
   }, [initialStudents]);
   const pendingTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
-  const handleStatusChange = (studentId: string, sectionId: string, newStatus: AttendanceStatus) => {
+  const handleStatusChange = (studentId: string, subjectId: string, newStatus: AttendanceStatus) => {
     const studentIndex = students.findIndex(s => s.id === studentId);
     const oldStatus = students[studentIndex].status;
 
@@ -73,7 +73,7 @@ export default function RosterTable({
     // 4. Set 5s timeout to commit to DB
     pendingTimeouts.current[studentId] = setTimeout(async () => {
       try {
-        const result = await updateAttendance(studentId, sectionId, newStatus, oldStatus || undefined, selectedDateISO ? new Date(selectedDateISO) : undefined);
+        const result = await updateAttendance(studentId, subjectId, newStatus, oldStatus || undefined, selectedDateISO ? new Date(selectedDateISO) : undefined);
         delete pendingTimeouts.current[studentId];
         if (result?.error) {
           toast.error(result.error, { id: toastId });
@@ -140,7 +140,7 @@ export default function RosterTable({
                   variant="ghost"
                   size="sm"
                   className={`h-8 w-8 p-0 rounded-full transition-colors ${student.status === 'PRESENT' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground/50 hover:text-green-500 hover:bg-green-500/10'}`}
-                  onClick={() => handleStatusChange(student.id, student.sectionId, "PRESENT")}
+                  onClick={() => handleStatusChange(student.id, student.subjectId, "PRESENT")}
                   title="Mark Present"
                 >
                   <CheckCircle2 className="h-4 w-4" />
@@ -149,7 +149,7 @@ export default function RosterTable({
                   variant="ghost"
                   size="sm"
                   className={`h-8 w-8 p-0 rounded-full transition-colors ${student.status === 'LATE' ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/50 hover:text-amber-500 hover:bg-amber-500/10'}`}
-                  onClick={() => handleStatusChange(student.id, student.sectionId, "LATE")}
+                  onClick={() => handleStatusChange(student.id, student.subjectId, "LATE")}
                   title="Mark Late"
                 >
                   <Clock className="h-4 w-4" />
@@ -158,7 +158,7 @@ export default function RosterTable({
                   variant="ghost"
                   size="sm"
                   className={`h-8 w-8 p-0 rounded-full transition-colors ${student.status === 'ABSENT' ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground/50 hover:text-red-500 hover:bg-red-500/10'}`}
-                  onClick={() => handleStatusChange(student.id, student.sectionId, "ABSENT")}
+                  onClick={() => handleStatusChange(student.id, student.subjectId, "ABSENT")}
                   title="Mark Absent"
                 >
                   <XCircle className="h-4 w-4" />

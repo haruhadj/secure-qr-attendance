@@ -100,7 +100,7 @@ export async function getStaff() {
       role: { in: [UserRole.ADMIN, UserRole.TEACHER] },
     },
     include: {
-      teacher: { include: { sections: true } },
+      teacher: { include: { sections: true, subjects: true } },
     },
     orderBy: { name: "asc" },
   });
@@ -146,28 +146,31 @@ export async function addStaff(name: string, email: string, role: UserRole) {
   return { success: true, message: `${name} added as ${role}.` };
 }
 
-export async function resetStaffPassword(userId: string) {
+export async function resetStaffPasswordToTemp(userId: string, tempPassword: string) {
   await requireAdmin();
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { success: false, message: "User not found." };
 
+  if (!tempPassword || tempPassword.length < 6) {
+    return { success: false, message: "Temporary password is too short." };
+  }
+
   const bcrypt = require("bcryptjs");
-  const defaultPassword = user.role === UserRole.TEACHER ? "teacher123" : "password123";
-  const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
+  const hashedPassword = bcrypt.hashSync(tempPassword, 10);
 
   await prisma.user.update({
     where: { id: userId },
     data: { password: hashedPassword },
   });
 
-  await logActivity("STUDENT_PASSWORD_RESET", `Admin reset password for ${user.name} (${user.role})`, {
+  await logActivity("STUDENT_PASSWORD_RESET", `Admin set temporary password for ${user.name} (${user.role})`, {
     userId,
     role: user.role,
   });
 
   revalidatePath("/admin/staff");
-  return { success: true, message: `Password reset to default for ${user.name}.` };
+  return { success: true, message: `Password updated for ${user.name}.` };
 }
 
 export async function removeStaff(userId: string) {

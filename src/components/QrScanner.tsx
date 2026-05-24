@@ -28,15 +28,16 @@ interface ScanResult {
   timestamp: Date;
 }
 
-interface Section {
+interface Subject {
   id: string;
+  code: string;
   name: string;
-  _count?: { students: number };
+  _count?: { enrollments: number };
 }
 
-export default function QrScanner({ sections }: { sections: Section[] }) {
-  const [selectedSectionId, setSelectedSectionId] = useState<string>(
-    sections.length > 0 ? sections[0].id : ""
+export default function QrScanner({ subjects }: { subjects: Subject[] }) {
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
+    subjects.length > 0 ? subjects[0].id : ""
   );
   const [isScanning, setIsScanning] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,8 +50,8 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
   const handleScanSuccess = useCallback(async (decodedText: string) => {
     // Prevent duplicate scans within 3 seconds
     if (cooldownRef.current || decodedText === lastScannedRef.current) return;
-    if (!selectedSectionId) {
-      toast.error("Please select a section first.");
+    if (!selectedSubjectId) {
+      toast.error("Please select a subject first.");
       return;
     }
 
@@ -59,7 +60,7 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
     setIsProcessing(true);
 
     try {
-      const result = await scanQrAttendance(decodedText, selectedSectionId);
+      const result = await scanQrAttendance(decodedText, selectedSubjectId);
 
       const scanResult: ScanResult = {
         ...result,
@@ -84,7 +85,7 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
         lastScannedRef.current = "";
       }, 3000);
     }
-  }, [selectedSectionId]);
+  }, [selectedSubjectId]);
 
   const startScanning = useCallback(async () => {
     setCameraError(null);
@@ -165,16 +166,16 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {sections.length > 0 && (
+              {subjects.length > 0 && (
                 <select
-                  value={selectedSectionId}
-                  onChange={(e) => setSelectedSectionId(e.target.value)}
+                  value={selectedSubjectId}
+                  onChange={(e) => setSelectedSubjectId(e.target.value)}
                   disabled={isScanning}
-                  className="flex h-10 w-full sm:w-[200px] rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
+                  className="flex h-10 w-full sm:w-[240px] rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
                 >
-                  {sections.map((sec) => (
-                    <option key={sec.id} value={sec.id}>
-                      {sec.name} {sec._count ? `(${sec._count.students})` : ""}
+                  {subjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.code} — {sub.name} {sub._count ? `(${sub._count.enrollments})` : ""}
                     </option>
                   ))}
                 </select>
@@ -183,7 +184,7 @@ export default function QrScanner({ sections }: { sections: Section[] }) {
                 onClick={isScanning ? stopScanning : startScanning}
                 variant={isScanning ? "destructive" : "default"}
                 className="gap-2"
-                disabled={!selectedSectionId}
+                disabled={!selectedSubjectId}
               >
                 {isScanning ? (
                   <>

@@ -27,7 +27,7 @@ function formatColDate(date: Date): string {
   return `${m}/${d}/${y}`;
 }
 
-export default function ExportCsvButton({ sectionId, sectionName }: { sectionId: string; sectionName: string }) {
+export default function ExportCsvButton({ subjectId, subjectName }: { subjectId: string; subjectName: string }) {
   const now = new Date();
   const firstOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
   const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -50,7 +50,7 @@ export default function ExportCsvButton({ sectionId, sectionName }: { sectionId:
 
     setLoading(true);
     try {
-      const { students } = await getAttendanceRange(sectionId, fromDate, toDate);
+      const { students } = await getAttendanceRange(subjectId, fromDate, toDate);
 
       // Build the list of unique dates in range
       const dates: Date[] = [];
@@ -86,7 +86,7 @@ export default function ExportCsvButton({ sectionId, sectionName }: { sectionId:
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${sectionName}_attendance_${from}_to_${to}.csv`;
+      a.download = `${subjectName}_attendance_${from}_to_${to}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("CSV exported successfully.");

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { addStudent, removeStudent, addSection, updateSection, removeSection, updateStudent, adminUpdateAttendance, deleteAttendance, resetStudentPassword, regenerateQrToken } from "@/src/app/actions/masterlist";
+import { addStudent, removeStudent, addSection, updateSection, removeSection, updateStudent, adminUpdateAttendance, deleteAttendance, resetStudentPasswordToTemp, regenerateQrToken, addSubject, updateSubject, removeSubject } from "@/src/app/actions/masterlist";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
-import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit } from "lucide-react";
+import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen } from "lucide-react";
 import { formatDate } from "@/src/lib/date";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -114,7 +114,7 @@ export function AddStudentForm({
               <Label htmlFor="section">Section</Label>
               <select
                 id="section"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={form.sectionId}
                 onChange={(e) => setForm((f) => ({ ...f, sectionId: e.target.value }))}
                 required
@@ -190,7 +190,7 @@ export function AddSectionForm({ teachers }: { teachers: { id: string; user: { n
         <Label htmlFor="steacher">Assign Teacher</Label>
         <select
           id="steacher"
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           value={teacherId}
           onChange={(e) => setTeacherId(e.target.value)}
         >
@@ -273,7 +273,7 @@ export function EditSectionModal({
               <Label htmlFor={`esteacher-${section.id}`}>Assign Teacher</Label>
               <select
                 id={`esteacher-${section.id}`}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={teacherId}
                 onChange={(e) => setTeacherId(e.target.value)}
               >
@@ -334,6 +334,15 @@ export function RemoveSectionButton({ sectionId, sectionName }: { sectionId: str
   );
 }
 
+function generateTempPassword(): string {
+  const letters = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+  const digits = "23456789";
+  let pass = "";
+  for (let i = 0; i < 5; i++) pass += letters[Math.floor(Math.random() * letters.length)];
+  for (let i = 0; i < 3; i++) pass += digits[Math.floor(Math.random() * digits.length)];
+  return pass;
+}
+
 export function EditStudentModal({
   student,
   sections,
@@ -343,7 +352,12 @@ export function EditStudentModal({
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pwModalOpen, setPwModalOpen] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [pwDone, setPwDone] = useState(false);
+  const [tempPw, setTempPw] = useState("");
+  const [pwCopied, setPwCopied] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
   const [form, setForm] = useState({
     name: student.user.name || "",
@@ -370,13 +384,35 @@ export function EditStudentModal({
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!confirm(`Reset password for "${student.user.name}" to their Student ID?`)) return;
+  const handleOpenPwModal = () => {
+    setTempPw(generateTempPassword());
+    setPwDone(false);
+    setPwCopied(false);
+    setShowPw(false);
+    setPwModalOpen(true);
+  };
+
+  const handlePwRegenerate = () => {
+    setTempPw(generateTempPassword());
+    setPwCopied(false);
+  };
+
+  const handlePwCopy = async () => {
+    await navigator.clipboard.writeText(tempPw);
+    setPwCopied(true);
+    setTimeout(() => setPwCopied(false), 2000);
+  };
+
+  const handlePwConfirm = async () => {
     setPwLoading(true);
     try {
-      const result = await resetStudentPassword(student.id);
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
+      const result = await resetStudentPasswordToTemp(student.id, tempPw);
+      if (result.success) {
+        setPwDone(true);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
     } catch {
       toast.error("Failed to reset password.");
     } finally {
@@ -407,6 +443,7 @@ export function EditStudentModal({
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader>
@@ -447,7 +484,7 @@ export function EditStudentModal({
               <Label htmlFor={`esection-${student.id}`}>Section</Label>
               <select
                 id={`esection-${student.id}`}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={form.sectionId}
                 onChange={(e) => setForm((f) => ({ ...f, sectionId: e.target.value }))}
               >
@@ -477,10 +514,9 @@ export function EditStudentModal({
                 variant="outline"
                 size="sm"
                 className="gap-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
-                onClick={handleResetPassword}
-                disabled={pwLoading}
+                onClick={handleOpenPwModal}
               >
-                {pwLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyRound className="w-3.5 h-3.5" />}
+                <KeyRound className="w-3.5 h-3.5" />
                 Reset Password
               </Button>
               <Button
@@ -499,6 +535,100 @@ export function EditStudentModal({
         </CardContent>
       </Card>
     </div>
+
+    {pwModalOpen && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <Card className="w-full max-w-sm shadow-2xl">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-amber-500/10 rounded-lg">
+                  <KeyRound className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Reset Password</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">{student.user.name}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setPwModalOpen(false)} className="h-8 w-8">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!pwDone ? (
+              <>
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
+                  <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground">
+                    A new temporary password will be set for <span className="font-semibold text-foreground">{student.user.name}</span>. Share it with them and advise them to change it after logging in.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Temporary Password</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        readOnly
+                        type={showPw ? "text" : "password"}
+                        value={tempPw}
+                        className="w-full h-9 px-3 pr-9 rounded-md border border-input bg-muted font-mono text-sm text-foreground focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw((v) => !v)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handlePwCopy} title="Copy password">
+                      {pwCopied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                    <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={handlePwRegenerate} title="Generate new password">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button type="button" variant="ghost" className="flex-1" onClick={() => setPwModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" className="flex-1 gap-2 bg-amber-500 hover:bg-amber-600 text-white" onClick={handlePwConfirm} disabled={pwLoading}>
+                    {pwLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyRound className="w-3.5 h-3.5" />}
+                    {pwLoading ? "Saving..." : "Confirm Reset"}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20 text-center space-y-3">
+                  <Check className="w-8 h-8 text-green-500 mx-auto" />
+                  <p className="text-sm font-semibold text-foreground">Password reset successfully</p>
+                  <p className="text-xs text-muted-foreground">The new password for <span className="font-semibold text-foreground">{student.user.name}</span> is:</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <code className="text-base font-mono font-bold tracking-widest text-foreground bg-muted px-4 py-2 rounded-lg">
+                      {showPw ? tempPw : "••••••••"}
+                    </code>
+                    <button type="button" onClick={() => setShowPw((v) => !v)} className="text-muted-foreground hover:text-foreground">
+                      {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button type="button" onClick={handlePwCopy} className="text-muted-foreground hover:text-foreground">
+                      {pwCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">This is the only time you can view this password.</p>
+                </div>
+                <Button type="button" className="w-full" onClick={() => setPwModalOpen(false)}>
+                  Done
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    )}
+  </>
   );
 }
 
@@ -544,14 +674,14 @@ export function RemoveStudentButton({
 export function EditAttendanceModal({
   studentDbId,
   studentName,
-  sectionId,
+  subjectId,
   selectedDate,
   currentStatus,
   currentTime,
 }: {
   studentDbId: string;
   studentName: string;
-  sectionId: string;
+  subjectId: string;
   selectedDate: Date;
   currentStatus: string | null;
   currentTime: Date | null;
@@ -572,7 +702,7 @@ export function EditAttendanceModal({
     try {
       const result = await adminUpdateAttendance(
         studentDbId,
-        sectionId,
+        subjectId,
         selectedDate,
         status as "PRESENT" | "ABSENT" | "LATE",
         time || undefined
@@ -678,13 +808,13 @@ export function EditAttendanceModal({
 export function DeleteAttendanceButton({
   studentDbId,
   studentName,
-  sectionId,
+  subjectId,
   selectedDate,
   hasAttendance,
 }: {
   studentDbId: string;
   studentName: string;
-  sectionId: string;
+  subjectId: string;
   selectedDate: Date;
   hasAttendance: boolean;
 }) {
@@ -694,7 +824,7 @@ export function DeleteAttendanceButton({
     if (!confirm(`Clear attendance record for "${studentName}" on ${formatDate(selectedDate)}?`)) return;
     setLoading(true);
     try {
-      const result = await deleteAttendance(studentDbId, sectionId, selectedDate);
+      const result = await deleteAttendance(studentDbId, subjectId, selectedDate);
       if (result.success) toast.success(result.message);
       else toast.error(result.message);
     } catch {
@@ -788,6 +918,252 @@ export function ViewQrModal({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function AddSubjectForm({ teachers }: { teachers: { id: string; user: { name: string | null } }[] }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [units, setUnits] = useState("");
+  const [scheduleDays, setScheduleDays] = useState<string[]>([]);
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [teacherId, setTeacherId] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const toggleDay = (day: string) =>
+    setScheduleDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim() || !name.trim()) { toast.error("Subject code and name are required."); return; }
+    setLoading(true);
+    try {
+      const result = await addSubject({
+        code: code.trim(),
+        name: name.trim(),
+        units: units ? parseInt(units) : undefined,
+        scheduleDay: scheduleDays.length > 0 ? scheduleDays.join(",") : undefined,
+        scheduleTime: scheduleTime || undefined,
+        teacherId: teacherId || undefined,
+      });
+      if (result.success) {
+        toast.success(result.message);
+        setOpen(false); setCode(""); setName(""); setUnits(""); setScheduleDays([]); setScheduleTime(""); setTeacherId("");
+      } else {
+        toast.error(result.message);
+      }
+    } catch { toast.error("Failed to create subject."); }
+    finally { setLoading(false); }
+  };
+
+  if (!open) {
+    return (
+      <Button onClick={() => setOpen(true)} size="sm" variant="outline" className="gap-2">
+        <BookOpen className="w-4 h-4" />
+        Add Subject
+      </Button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Add Subject</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="h-8 w-8"><X className="w-4 h-4" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Subject Code *</Label>
+                <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="OS101" />
+              </div>
+              <div className="space-y-1">
+                <Label>Units</Label>
+                <Input type="number" value={units} onChange={(e) => setUnits(e.target.value)} placeholder="3" min={1} max={6} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Subject Name *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Operating Systems" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1 col-span-2">
+                <Label>Schedule Day</Label>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-input bg-background px-3 py-2">
+                  {["Mon","Tue","Wed","Thu","Fri","Sat"].map((day) => (
+                    <label key={day} className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
+                      <input type="checkbox" checked={scheduleDays.includes(day)} onChange={() => toggleDay(day)} className="accent-primary" />
+                      {day}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Schedule Time</Label>
+                <Input value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} placeholder="08:00-09:30" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Assigned Teacher</Label>
+              <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <option value="">-- Unassigned --</option>
+                {teachers.map((t) => <option key={t.id} value={t.id}>{t.user.name}</option>)}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={loading} className="gap-2">
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Create Subject
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function EditSubjectModal({
+  subject,
+  teachers,
+}: {
+  subject: { id: string; code: string; name: string; units?: number | null; scheduleDay?: string | null; scheduleTime?: string | null; teacherId?: string | null };
+  teachers: { id: string; user: { name: string | null } }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState(subject.code);
+  const [name, setName] = useState(subject.name);
+  const [units, setUnits] = useState(subject.units ? String(subject.units) : "");
+  const [scheduleDays, setScheduleDays] = useState<string[]>(
+    subject.scheduleDay ? subject.scheduleDay.split(",").map((d) => d.trim()).filter(Boolean) : []
+  );
+  const [scheduleTime, setScheduleTime] = useState(subject.scheduleTime || "");
+  const [teacherId, setTeacherId] = useState(subject.teacherId || "");
+  const [loading, setLoading] = useState(false);
+
+  const toggleDay = (day: string) =>
+    setScheduleDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const result = await updateSubject(subject.id, {
+        code: code.trim() || undefined,
+        name: name.trim() || undefined,
+        units: units ? parseInt(units) : null,
+        scheduleDay: scheduleDays.length > 0 ? scheduleDays.join(",") : null,
+        scheduleTime: scheduleTime || null,
+        teacherId: teacherId || null,
+      });
+      if (result.success) { toast.success(result.message); setOpen(false); }
+      else toast.error(result.message);
+    } catch { toast.error("Failed to update subject."); }
+    finally { setLoading(false); }
+  };
+
+  if (!open) {
+    return (
+      <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); setOpen(true); }} className="h-7 w-7 text-muted-foreground hover:text-primary" title="Edit Subject">
+        <Edit2 className="w-3.5 h-3.5" />
+      </Button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Edit Subject</CardTitle>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="h-8 w-8"><X className="w-4 h-4" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Subject Code</Label>
+                <Input value={code} onChange={(e) => setCode(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label>Units</Label>
+                <Input type="number" value={units} onChange={(e) => setUnits(e.target.value)} min={1} max={6} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Subject Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1 col-span-2">
+                <Label>Schedule Day</Label>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-input bg-background px-3 py-2">
+                  {["Mon","Tue","Wed","Thu","Fri","Sat"].map((day) => (
+                    <label key={day} className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
+                      <input type="checkbox" checked={scheduleDays.includes(day)} onChange={() => toggleDay(day)} className="accent-primary" />
+                      {day}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Schedule Time</Label>
+                <Input value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Teacher</Label>
+              <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <option value="">-- Unassigned --</option>
+                {teachers.map((t) => <option key={t.id} value={t.id}>{t.user.name}</option>)}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={loading} className="gap-2">
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function RemoveSubjectButton({ subjectId, subjectCode }: { subjectId: string; subjectCode: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleRemove = async () => {
+    if (!confirm(`Delete subject "${subjectCode}"? This cannot be undone.`)) return;
+    setLoading(true);
+    try {
+      const result = await removeSubject(subjectId);
+      if (result.success) toast.success(result.message);
+      else toast.error(result.message);
+    } catch { toast.error("Failed to delete subject."); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+      onClick={(e) => { e.preventDefault(); handleRemove(); }}
+      disabled={loading}
+      title="Delete Subject"
+    >
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+    </Button>
   );
 }
 
