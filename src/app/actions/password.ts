@@ -46,7 +46,15 @@ export async function requestPasswordReset(email: string) {
     data: { identifier: email, token, expires },
   });
 
-  await sendPasswordResetEmail(email, user.name || "User", token);
+  try {
+    await sendPasswordResetEmail(email, user.name || "User", token);
+  } catch (err: any) {
+    await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+    const msg = err?.message?.includes("not configured")
+      ? "Email service is not configured. Contact your administrator."
+      : "Failed to send reset email. Please try again later.";
+    return { success: false, message: msg };
+  }
 
   return { success: true, message: "If that email exists, a reset link has been sent." };
 }
