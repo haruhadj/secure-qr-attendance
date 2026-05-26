@@ -19,6 +19,11 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/src/components/ThemeToggle";
 
+// ─── LOGO TUNING ──────────────────────────────────────────────
+const LOGO_SIZE    = "w-72 h-72"; // Tailwind size class  e.g. w-40 w-52 w-60 w-72
+const LOGO_MOVE_UP = "-mt-12";          // Pull logo upward      e.g. -mt-4 -mt-8 -mt-12
+// ───────────────────────────────────────────────────────────────
+
 export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -90,19 +95,19 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen bg-background flex flex-col items-center justify-start md:justify-center p-4 py-12 md:py-4">
-      <div className="absolute top-4 right-4">
+    <main className="relative min-h-screen bg-background flex flex-col items-center justify-center p-4 -mt-16">
+      <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center">
+      <div className="w-full max-w-md space-y-4">
+        <div className="text-center space-y-0.5">
+          <div className="flex justify-center -mb-4">
             <Image
               src="/olac-logo.png"
               alt="OLAC Logo"
-              width={200}
-              height={200}
-              className="drop-shadow-lg dark:brightness-125 dark:contrast-110"
+              width={400}
+              height={400}
+              className={`${LOGO_SIZE} ${LOGO_MOVE_UP} object-contain drop-shadow-2xl dark:brightness-125 dark:contrast-110`}
               priority
             />
           </div>
