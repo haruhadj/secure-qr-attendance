@@ -26,7 +26,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar({ role }: { role: string }) {
   const pathname = usePathname();
-  
+
   if (pathname === "/") return null;
 
   const teacherLinks = [
@@ -55,20 +55,31 @@ export default function Navbar({ role }: { role: string }) {
       <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight text-primary">
-              <Image src="/olac-logo.png" alt="OLAC" width={28} height={28} />
-              <span className="hidden sm:inline">OLAC AttendQR</span>
+            <Link
+              href="/"
+              className="flex items-center gap-3 font-bold tracking-tight text-primary"
+            >
+              <Image
+                src="/olac-logo.png"
+                alt="OLAC"
+                width={160}
+                height={160}
+                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 object-contain"
+              />
+              <span className="text-lg sm:text-xl font-semibold">
+                OLAC AttendQR
+              </span>
             </Link>
-            
+
             <div className="hidden md:flex items-center gap-1">
               {links.map((link) => (
-                <Link 
-                  key={link.href} 
+                <Link
+                  key={link.href}
                   href={link.href}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors",
-                    pathname === link.href 
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                    pathname === link.href
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
                 >
@@ -81,9 +92,9 @@ export default function Navbar({ role }: { role: string }) {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="hidden md:flex text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
               onClick={() => signOut({ callbackUrl: "/" })}
             >

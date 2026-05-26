@@ -100,8 +100,8 @@ export default function Home() {
             <Image
               src="/olac-logo.png"
               alt="OLAC Logo"
-              width={120}
-              height={120}
+              width={200}
+              height={200}
               className="drop-shadow-lg dark:brightness-125 dark:contrast-110"
               priority
             />
