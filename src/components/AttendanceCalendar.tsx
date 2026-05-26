@@ -37,7 +37,12 @@ export default function AttendanceCalendar({ attendances }: { attendances: any[]
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getAttendanceForDay = (day: Date) => {
-    return attendances.find(a => isSameDay(new Date(a.date), day));
+    return attendances.find(a => {
+      const d = new Date(a.date);
+      // Compare using PH local date components to avoid UTC midnight off-by-one
+      const phDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+      return isSameDay(phDate, day);
+    });
   };
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));

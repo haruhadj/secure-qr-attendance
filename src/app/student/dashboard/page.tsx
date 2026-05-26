@@ -16,6 +16,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { IdCard, History, CheckCircle2, XCircle, Clock, ArrowRight, Calendar, User, Mail, BookOpen, Hash, GraduationCap } from "lucide-react";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import { format, isToday, isYesterday } from "date-fns";
+import { formatDate, formatTime } from "@/src/lib/date";
 import AttendanceCalendar from "@/src/components/AttendanceCalendar";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 
@@ -239,7 +240,7 @@ export default async function StudentDashboard() {
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
                             <div className="font-bold text-foreground flex items-center gap-2">
-                              {format(new Date(att.date), "MMMM d, yyyy")}
+                              {formatDate(att.date)}
                               {isToday(new Date(att.date)) && (
                                 <Badge variant="outline" className="text-[10px] h-4 px-1 bg-primary/5 text-primary border-primary/20">TODAY</Badge>
                               )}
@@ -247,7 +248,7 @@ export default async function StudentDashboard() {
                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {format(new Date(att.updatedAt), "hh:mm a")}
+                                {formatTime(att.updatedAt)}
                               </span>
                               <span>•</span>
                               <span className="flex items-center gap-1">
