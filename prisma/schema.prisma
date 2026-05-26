@@ -143,7 +143,7 @@ model Appeal {
   id          String    @id @default(cuid())
   studentId   String
   student     Student   @relation(fields: [studentId], references: [id])
-  imageUrl    String    // Metadata storage
+  imageUrl    String?   // Optional proof image URL
   description String
   status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedBy  String?   // Teacher/Admin User ID who reviewed

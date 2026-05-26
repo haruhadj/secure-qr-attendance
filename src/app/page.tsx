@@ -14,8 +14,10 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Label } from "@/src/components/ui/label";
-import { ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/src/components/ThemeToggle";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -88,19 +90,27 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-start md:justify-center p-4 py-12 md:py-4">
+    <main className="relative min-h-screen bg-background flex flex-col items-center justify-start md:justify-center p-4 py-12 md:py-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="p-3 bg-primary/10 rounded-2xl">
-              <ShieldCheck className="w-12 h-12 text-primary" />
-            </div>
+            <Image
+              src="/olac-logo.png"
+              alt="OLAC Logo"
+              width={120}
+              height={120}
+              className="drop-shadow-lg dark:brightness-125 dark:contrast-110"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans">
-            Secure QR Attendance
+            OLAC AttendQR
           </h1>
           <p className="text-muted-foreground">
-            Monitoring system with hybrid fallback
+            QR-Based Attendance Monitoring System
           </p>
         </div>
 

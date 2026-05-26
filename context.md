@@ -94,7 +94,9 @@ src/
 | `Teacher` | Teacher profile, 1:1 with User | `userId` (unique), has many `sections` |
 | `Student` | Student profile, 1:1 with User | `studentId` (unique, e.g. "2022-0001"), `qrToken` (unique UUID), `sectionId` (nullable) |
 | `Section` | Class section | `name` (unique), `teacherId` (nullable FK to Teacher) |
-| `Attendance` | Daily attendance record | `studentId`, `date`, `sectionId`, `status` (PRESENT/ABSENT/LATE). Unique constraint: `[studentId, date, sectionId]` |
+| `Subject` | Course/subject | `code` (unique), `name`, `units`, `scheduleDay`, `scheduleTime`, `teacherId` (nullable FK to Teacher) |
+| `StudentSubject` | Enrollment join table | `studentId`, `subjectId`. Unique constraint: `[studentId, subjectId]` |
+| `Attendance` | Daily attendance record | `studentId`, `date`, `subjectId`, `status` (PRESENT/ABSENT/LATE). Unique constraint: `[studentId, date, subjectId]` |
 | `AttendanceAudit` | Immutable edit history | `attendanceId`, `changedBy`, `oldStatus`, `newStatus`, `reason` |
 | `Appeal` | Student absence appeal | `studentId`, `imageUrl`, `description`, `status` (PENDING/APPROVED/REJECTED), `reviewedBy` |
 | `ActivityLog` | System-wide activity feed | `type` (ActivityType enum string), `description`, `userId`, `metadata` (JSON) |
@@ -102,8 +104,11 @@ src/
 
 **Relationships:**
 - User ↔ Teacher (1:1), User ↔ Student (1:1)
-- Teacher → Section (1:many), Section → Student (1:many)
+- Teacher → Section (1:many), Teacher → Subject (1:many)
+- Section → Student (1:many)
+- Student → StudentSubject → Subject (many:many enrollment)
 - Student → Attendance (1:many), Student → Appeal (1:many)
+- Subject → Attendance (1:many)
 
 ---
 

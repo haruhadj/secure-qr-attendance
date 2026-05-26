@@ -18,7 +18,6 @@ export async function submitAppeal(studentId: string, description: string) {
     data: {
       studentId,
       description,
-      imageUrl: "",
       status: "PENDING"
     }
   });

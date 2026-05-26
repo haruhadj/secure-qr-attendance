@@ -11,8 +11,8 @@ import { authOptions } from "@/src/lib/auth";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Secure QR Attendance",
-  description: "Secure QR-Based Attendance Monitoring System",
+  title: "OLAC AttendQR",
+  description: "QR-Based Attendance Monitoring System — Our Lady of Assumption College",
 };
 
 export default async function RootLayout({

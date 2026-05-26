@@ -196,8 +196,12 @@ export async function removeStaff(userId: string) {
 
   await prisma.$transaction(async (tx) => {
     if (user.teacher) {
-      // Remove teacher assignments from sections
+      // Remove teacher assignments from sections and subjects
       await tx.section.updateMany({
+        where: { teacherId: user.teacher.id },
+        data: { teacherId: null },
+      });
+      await tx.subject.updateMany({
         where: { teacherId: user.teacher.id },
         data: { teacherId: null },
       });

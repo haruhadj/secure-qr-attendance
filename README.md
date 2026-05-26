@@ -1,5 +1,4 @@
 <div align="center">
-<img width="1200" alt="Secure QR Attendance System Banner" src="C:\Users\admin\.gemini\antigravity\brain\e19af469-0947-4886-9b1c-6ef562225993\secure_qr_attendance_banner_1778128388125.png" />
 
 # 🛡️ Secure QR Attendance System
 
@@ -99,7 +98,7 @@ The **Secure QR Attendance System** streamlines the attendance process using a "
 
 ---
 
-## � Default Passwords
+## 🔑 Default Passwords
 
 These are the **initial** passwords assigned at setup or when accounts are created/reset. Users should change these after first login.
 
@@ -107,7 +106,7 @@ These are the **initial** passwords assigned at setup or when accounts are creat
 |---|---|---|
 | **Admin** | `password123` | Set on seed & when admin password is reset via Staff Management |
 | **Teacher** | `teacher123` | Set when adding a teacher via Staff Management or resetting their password |
-| **Student** | `password123` | Set when importing via CSV masterlist or running the seed script |
+| **Student** | Their Student ID (e.g. `2022-0001`) | Set when importing via CSV masterlist or adding manually. Seed script also uses `studentId` as password. |
 
 > **Important:** The Demo Accounts card on the admin dashboard displays these **initial defaults only** — it does not reflect any passwords changed after setup.
 
@@ -117,7 +116,7 @@ Password rules enforced on change:
 
 ---
 
-## �🛡️ Security & Patterns
+## 🛡️ Security & Patterns
 
 - **Password Hashing**: All passwords are encrypted using `bcryptjs`.
 - **UTC Normalization**: Attendance records use UTC midnight normalization to prevent timezone discrepancies.
