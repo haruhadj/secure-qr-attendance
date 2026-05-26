@@ -14,7 +14,7 @@ export async function sendPasswordResetEmail(
   const APP_URL = process.env.NEXTAUTH_URL || process.env.APP_URL || "http://localhost:3000";
   const resetUrl = `${APP_URL}/reset-password/${token}`;
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: toEmail,
     subject: "Reset your password — Secure QR Attendance",
@@ -39,4 +39,11 @@ export async function sendPasswordResetEmail(
       </div>
     `,
   });
+
+  if (error) {
+    console.error("[email] Resend error:", JSON.stringify(error));
+    throw new Error(error.message || "Failed to send email.");
+  }
+
+  console.log("[email] Sent successfully. ID:", data?.id, "| from:", FROM_EMAIL, "| to:", toEmail);
 }
