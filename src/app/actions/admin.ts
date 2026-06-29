@@ -173,6 +173,36 @@ export async function resetStaffPasswordToTemp(userId: string, tempPassword: str
   return { success: true, message: `Password updated for ${user.name}.` };
 }
 
+export async function resetAllData() {
+  const session = await requireAdmin();
+  const adminId = (session.user as any).id;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.attendanceAudit.deleteMany();
+    await tx.attendance.deleteMany();
+    await tx.appeal.deleteMany();
+    await tx.studentSubject.deleteMany();
+    await tx.activityLog.deleteMany();
+    await tx.student.deleteMany();
+    await tx.subject.deleteMany();
+    await tx.section.deleteMany();
+    await tx.teacher.deleteMany();
+    await tx.user.deleteMany({
+      where: { role: { in: [UserRole.STUDENT, UserRole.TEACHER] } },
+    });
+  });
+
+  // Log the reset after the transaction so the admin user still exists
+  await logActivity("DATA_RESET", "Full data reset performed — all students, teachers, sections, subjects, and attendance records deleted. Admin accounts preserved.", {
+    performedBy: adminId,
+  });
+
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/staff");
+  revalidatePath("/admin/masterlist");
+  return { success: true, message: "All data has been reset. Admin accounts are preserved." };
+}
+
 export async function removeStaff(userId: string) {
   const session = await requireAdmin();
 

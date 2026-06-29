@@ -116,6 +116,110 @@ Password rules enforced on change:
 
 ---
 
+## 🗄️ Data Management Guide
+
+This section covers how to manage, import, and reset system data as an administrator.
+
+---
+
+### Importing Student Data (CSV Masterlist)
+
+The fastest way to populate the system is via bulk CSV import from **Admin → Masterlist**.
+
+**CSV Format:**
+
+| Column | Required | Example | Notes |
+|---|---|---|---|
+| `studentId` | Yes | `2022-0001` | Unique school ID; also used as initial password |
+| `name` | Yes | `Juan dela Cruz` | Full name |
+| `section` | Yes | `BSCS 3rd Year` | Auto-created if it doesn't exist |
+| `subjects` | No | `OS101,NET102` | Comma-separated subject codes |
+
+**Steps:**
+1. Go to **Admin → Masterlist**
+2. Click **Import CSV**
+3. Upload your `.csv` file — a preview will be shown
+4. Click **Confirm Import** to apply
+
+> Each imported student gets an account automatically. Initial password = their Student ID (e.g., `2022-0001`). Students should change this on first login.
+
+See [`how_to_import_masterlist.md`](how_to_import_masterlist.md) for a detailed template and rules.
+
+---
+
+### Adding Data Manually
+
+All manual CRUD operations are available from the admin interface:
+
+| Data Type | Location | What You Can Do |
+|---|---|---|
+| **Sections** | Admin → Masterlist | Add / Edit / Remove sections |
+| **Students** | Admin → Masterlist → Section | Add / Edit / Remove students per section |
+| **Teachers** | Admin → Staff | Add / Remove teachers |
+| **Subjects** | Admin → Masterlist | Add / Edit / Remove subjects |
+| **System Settings** | Admin → Dashboard | Change attendance lock hours |
+
+---
+
+### Resetting System Data
+
+The **Reset System Data** feature deletes all operational data while keeping admin accounts intact. Use this to wipe the database at the start of a new school year or for a fresh deployment.
+
+**What gets deleted:**
+- All students and their user accounts
+- All teachers and their user accounts
+- All sections
+- All subjects
+- All attendance records
+- All attendance audit history
+- All student appeals
+- All activity logs
+
+**What is preserved:**
+- All admin accounts (including your own)
+- System settings (e.g., `attendance_lock_hours`)
+
+**How to reset from the Admin Dashboard:**
+
+1. Log in as an **Admin** and go to **Admin → Dashboard**
+2. Scroll to the **Reset System Data** card at the bottom
+3. Click **Reset All Data**
+4. A confirmation panel will appear — read the warning carefully
+5. Type `RESET` (all caps) in the confirmation field
+6. Click **Confirm Reset**
+
+The reset is recorded in the activity log immediately after completion (the log entry is written by the admin who performed it).
+
+> **Warning:** This action is irreversible. There is no undo. Make sure you have a database backup if you need to recover data.
+
+---
+
+### Database Backup & Recovery
+
+Before performing a data reset or major import, consider taking a database snapshot:
+
+```bash
+# Backup
+pg_dump "$DATABASE_URL" > backup_$(date +%Y%m%d).sql
+
+# Restore
+psql "$DATABASE_URL" < backup_20240101.sql
+```
+
+---
+
+### Re-seeding the Database
+
+To restore the demo data (1 admin, 1 teacher, 5 students, 3 subjects):
+
+```bash
+pnpm db:seed
+```
+
+> Re-seeding does **not** wipe existing data — it only creates missing demo records. If you've already reset via the dashboard, run seed to repopulate with demo accounts.
+
+---
+
 ## 🛡️ Security & Patterns
 
 - **Password Hashing**: All passwords are encrypted using `bcryptjs`.
