@@ -173,6 +173,99 @@ export async function resetStaffPasswordToTemp(userId: string, tempPassword: str
   return { success: true, message: `Password updated for ${user.name}.` };
 }
 
+export async function exportAllData() {
+  await requireAdmin();
+
+  const [
+    admins,
+    teachers,
+    students,
+    sections,
+    subjects,
+    enrollments,
+    attendance,
+    attendanceAudit,
+    appeals,
+    systemSettings,
+  ] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: UserRole.ADMIN },
+      select: { id: true, name: true, email: true, role: true },
+    }),
+    prisma.user.findMany({
+      where: { role: UserRole.TEACHER },
+      select: {
+        id: true, name: true, email: true, role: true,
+        teacher: { select: { id: true } },
+      },
+    }),
+    prisma.student.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+        section: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.section.findMany({
+      include: { teacher: { select: { id: true, userId: true } } },
+    }),
+    prisma.subject.findMany({
+      include: { teacher: { select: { id: true, userId: true } } },
+    }),
+    prisma.studentSubject.findMany(),
+    prisma.attendance.findMany({ orderBy: { date: "asc" } }),
+    prisma.attendanceAudit.findMany({ orderBy: { timestamp: "asc" } }),
+    prisma.appeal.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.systemSetting.findMany(),
+  ]);
+
+  return {
+    exportedAt: new Date().toISOString(),
+    version: "1.0",
+    data: {
+      admins,
+      teachers,
+      students,
+      sections,
+      subjects,
+      enrollments,
+      attendance,
+      attendanceAudit,
+      appeals,
+      systemSettings,
+    },
+  };
+}
+
+export async function resetAllData() {
+  const session = await requireAdmin();
+  const adminId = (session.user as any).id;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.attendanceAudit.deleteMany();
+    await tx.attendance.deleteMany();
+    await tx.appeal.deleteMany();
+    await tx.studentSubject.deleteMany();
+    await tx.activityLog.deleteMany();
+    await tx.student.deleteMany();
+    await tx.subject.deleteMany();
+    await tx.section.deleteMany();
+    await tx.teacher.deleteMany();
+    await tx.user.deleteMany({
+      where: { role: { in: [UserRole.STUDENT, UserRole.TEACHER] } },
+    });
+  });
+
+  // Log the reset after the transaction so the admin user still exists
+  await logActivity("DATA_RESET", "Full data reset performed — all students, teachers, sections, subjects, and attendance records deleted. Admin accounts preserved.", {
+    performedBy: adminId,
+  });
+
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/staff");
+  revalidatePath("/admin/masterlist");
+  return { success: true, message: "All data has been reset. Admin accounts are preserved." };
+}
+
 export async function removeStaff(userId: string) {
   const session = await requireAdmin();
 

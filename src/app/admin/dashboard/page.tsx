@@ -15,6 +15,7 @@ import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, Us
 import DemoAccountsCard from "./DemoAccountsCard";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
+import DataManagementCard from "@/src/components/DataManagementCard";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
@@ -197,6 +198,7 @@ export default async function AdminDashboard() {
 
         <DemoAccountsCard />
         <ChangePasswordForm />
+        <DataManagementCard />
       </div>
     </div>
   );
@@ -224,6 +226,7 @@ function getActivityIcon(type: string) {
     case "MASTERLIST_IMPORT":     return <Upload className="w-4 h-4" />;
     case "SETTING_UPDATE":        return <Settings className="w-4 h-4" />;
     case "APPEAL_REVIEW":         return <CheckCircle className="w-4 h-4" />;
+    case "DATA_RESET":            return <Trash2 className="w-4 h-4" />;
     default:                      return <Activity className="w-4 h-4" />;
   }
 }
@@ -231,7 +234,7 @@ function getActivityIcon(type: string) {
 function getActivityColor(type: string) {
   if (["STAFF_ADD","STUDENT_ADD","SECTION_ADD","SUBJECT_ADD","ATTENDANCE_SCAN","APPEAL_REVIEW","MASTERLIST_IMPORT"].includes(type))
     return "bg-green-500/10 text-green-500";
-  if (["STAFF_REMOVE","STUDENT_REMOVE","SECTION_REMOVE","SUBJECT_REMOVE","ATTENDANCE_DELETE"].includes(type))
+  if (["STAFF_REMOVE","STUDENT_REMOVE","SECTION_REMOVE","SUBJECT_REMOVE","ATTENDANCE_DELETE","DATA_RESET"].includes(type))
     return "bg-red-500/10 text-red-500";
   if (["ATTENDANCE_EDIT","ATTENDANCE_ADMIN_EDIT","SECTION_UPDATE","SUBJECT_UPDATE","STUDENT_UPDATE","SETTING_UPDATE"].includes(type))
     return "bg-blue-500/10 text-blue-500";

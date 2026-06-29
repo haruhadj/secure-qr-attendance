@@ -7,27 +7,28 @@ import { prisma } from "./prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 
-export type ActivityType = 
-  | "ATTENDANCE_EDIT" 
+export type ActivityType =
+  | "ATTENDANCE_EDIT"
   | "ATTENDANCE_SCAN"
   | "ATTENDANCE_ADMIN_EDIT"
   | "ATTENDANCE_DELETE"
-  | "STAFF_ADD" 
-  | "STAFF_REMOVE" 
-  | "STUDENT_ADD" 
-  | "STUDENT_REMOVE" 
+  | "STAFF_ADD"
+  | "STAFF_REMOVE"
+  | "STUDENT_ADD"
+  | "STUDENT_REMOVE"
   | "STUDENT_UPDATE"
   | "STUDENT_PASSWORD_RESET"
   | "STUDENT_QR_REGEN"
-  | "SECTION_ADD" 
-  | "SECTION_REMOVE" 
-  | "SECTION_UPDATE" 
+  | "SECTION_ADD"
+  | "SECTION_REMOVE"
+  | "SECTION_UPDATE"
   | "SUBJECT_ADD"
   | "SUBJECT_REMOVE"
   | "SUBJECT_UPDATE"
-  | "SETTING_UPDATE" 
+  | "SETTING_UPDATE"
   | "APPEAL_REVIEW"
-  | "MASTERLIST_IMPORT";
+  | "MASTERLIST_IMPORT"
+  | "DATA_RESET";
 
 /**
  * Logs a system activity to the ActivityLog table.
