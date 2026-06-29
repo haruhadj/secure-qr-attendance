@@ -15,7 +15,7 @@ import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, Us
 import DemoAccountsCard from "./DemoAccountsCard";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
-import DataResetCard from "@/src/components/DataResetCard";
+import DataManagementCard from "@/src/components/DataManagementCard";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
@@ -198,7 +198,7 @@ export default async function AdminDashboard() {
 
         <DemoAccountsCard />
         <ChangePasswordForm />
-        <DataResetCard />
+        <DataManagementCard />
       </div>
     </div>
   );

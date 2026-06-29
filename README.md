@@ -161,6 +161,32 @@ All manual CRUD operations are available from the admin interface:
 
 ---
 
+### Exporting a Backup
+
+The **Data Management** card on the Admin Dashboard lets you download a full snapshot of all system data as a JSON file. No server access required — the export runs in the browser.
+
+**What is included in the backup:**
+
+| Included | Not Included |
+|---|---|
+| All admin, teacher, and student accounts (name, email, role) | Passwords (never exported) |
+| Sections and subjects | |
+| Student enrollments | |
+| All attendance records and audit history | |
+| All student appeals | |
+| System settings | |
+
+**How to export:**
+
+1. Go to **Admin → Dashboard**
+2. Scroll to the **Data Management** card
+3. Click **Export Backup (.json)**
+4. A file named `qr-attendance-backup-YYYY-MM-DD.json` is downloaded immediately
+
+> Keep backups in a secure location. The JSON file contains personal information (student names, emails, IDs).
+
+---
+
 ### Resetting System Data
 
 The **Reset System Data** feature deletes all operational data while keeping admin accounts intact. Use this to wipe the database at the start of a new school year or for a fresh deployment.
@@ -182,8 +208,9 @@ The **Reset System Data** feature deletes all operational data while keeping adm
 **How to reset from the Admin Dashboard:**
 
 1. Log in as an **Admin** and go to **Admin → Dashboard**
-2. Scroll to the **Reset System Data** card at the bottom
-3. Click **Reset All Data**
+2. Scroll to the **Data Management** card at the bottom
+3. Export a backup first (recommended)
+4. Click **Reset All Data**
 4. A confirmation panel will appear — read the warning carefully
 5. Type `RESET` (all caps) in the confirmation field
 6. Click **Confirm Reset**
