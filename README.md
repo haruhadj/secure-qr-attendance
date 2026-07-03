@@ -43,6 +43,24 @@ The **Secure QR Attendance System** streamlines the attendance process using a "
 
 ---
 
+## 📚 Documentation
+
+Full documentation — architecture, database design, security, per-role user guides, developer/API reference, and thesis material (methodology, diagrams, limitations) — is published as a searchable **VitePress** site:
+
+**🔗 [https://haruhadj.github.io/secure-qr-attendance/](https://haruhadj.github.io/secure-qr-attendance/)**
+
+The source lives in [`docs/`](docs/). To run or build it locally:
+
+```bash
+pnpm docs:dev      # start the docs site locally (hot reload)
+pnpm docs:build    # build the static site to docs/.vitepress/dist
+pnpm docs:preview  # preview the production build
+```
+
+> The site auto-deploys to GitHub Pages via [`.github/workflows/deploy-docs.yml`](.github/workflows/deploy-docs.yml) on every push to `main` that changes `docs/`.
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
