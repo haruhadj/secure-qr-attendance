@@ -50,7 +50,7 @@ modules relevant to it.
 ## 🔒 Cross-cutting / platform features
 
 - **Role-based routing** enforced in middleware.
-- **Login rate limiting** (max 10 failed attempts per email per 15 minutes).
+- **Login rate limiting** (max 10 failed attempts per identifier — email or username — per 15 minutes).
 - **JWT sessions** with an 8-hour lifetime ("one school day").
 - **Immutable attendance auditing** via the `AttendanceAudit` table.
 - **Activity logging** of every mutation via `logActivity()`.

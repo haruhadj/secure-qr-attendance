@@ -26,7 +26,8 @@ erDiagram
 
     User {
         string id PK
-        string email UK
+        string email UK "nullable"
+        string username UK "nullable, login handle"
         string password "bcrypt hash"
         enum   role "ADMIN|TEACHER|STUDENT"
         string name

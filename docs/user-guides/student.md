@@ -3,6 +3,16 @@
 As a student you land on your **dashboard** (`/student/dashboard`) after logging
 in.
 
+## Logging in
+
+Sign in with **either your school email or your username** and your password.
+
+- If your school didn't have an email for you, you were given a **username**
+  based on your name — for example, *Michael G. Fernandez* → `michaelfernandez`.
+  Ask your administrator if you're unsure of yours.
+- Your **initial password is your student ID**. Change it after your first login
+  (see below).
+
 ## Your QR code (digital ID)
 
 Your dashboard displays your personal **QR code**. This is what your teacher

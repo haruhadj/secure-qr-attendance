@@ -5,8 +5,8 @@ has its own page: [QR Token Design](/security/qr-tokens).
 
 ## Authentication & sessions
 
-- **Credentials + bcrypt.** Users log in with email + password; passwords are
-  stored only as bcrypt hashes (cost factor 10) and verified with
+- **Credentials + bcrypt.** Users log in with **email or username** + password;
+  passwords are stored only as bcrypt hashes (cost factor 10) and verified with
   `bcrypt.compareSync`.
 - **JWT sessions, 8-hour lifetime.** Tokens carry the user's `id` and `role` and
   expire after one school day.
@@ -25,8 +25,9 @@ has its own page: [QR Token Design](/security/qr-tokens).
 
 ## Brute-force protection
 
-An in-memory limiter caps failed logins at **10 per email per 15 minutes**
-(`src/lib/auth.ts`). A successful login resets the counter.
+An in-memory limiter caps failed logins at **10 per identifier (email or
+username) per 15 minutes** (`src/lib/auth.ts`). A successful login resets the
+counter.
 
 ::: warning Not shared across instances
 The limiter is process-local and resets on restart. In a multi-instance

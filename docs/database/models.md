@@ -21,7 +21,8 @@ The base account for every person in the system.
 |---|---|---|
 | `id` | String PK | |
 | `name` | String? | Display name. |
-| `email` | String? **UK** | Login identifier. |
+| `email` | String? **UK** | Login identifier. Optional — imported students may have none. |
+| `username` | String? **UK** | Alternate login handle, lowercase (e.g. `michaelfernandez`). Auto-derived from the name for students. |
 | `password` | String? | bcrypt hash (cost 10). |
 | `role` | `UserRole` | Defaults to `STUDENT`. |
 | `image`, `emailVerified` | | NextAuth adapter fields. |

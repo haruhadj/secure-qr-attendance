@@ -10,9 +10,9 @@ sequenceDiagram
     participant U as User
     participant NA as NextAuth authorize()
     participant DB as PostgreSQL
-    U->>NA: email + password
-    NA->>NA: rate-limit check (per email)
-    NA->>DB: find user by email
+    U->>NA: identifier (email or username) + password
+    NA->>NA: rate-limit check (per identifier)
+    NA->>DB: find user where email = id OR username = id (lowercased)
     DB-->>NA: user (with bcrypt hash)
     NA->>NA: bcrypt.compareSync(password, hash)
     alt Valid
@@ -24,6 +24,10 @@ sequenceDiagram
     end
 ```
 
+- **Identifier.** The login field accepts **either an email or a username**.
+  `authorize()` matches on `email OR username` (usernames are stored and matched
+  lowercase). This lets students imported without an email sign in with a
+  name-derived handle — see [Masterlist CSV Import](/features/masterlist-import).
 - **Password check.** Passwords are verified against a bcrypt hash
   (`bcrypt.compareSync`). Plaintext passwords are never stored.
 - **Session.** On success a JWT is issued carrying the user's `id` and `role`.
@@ -32,9 +36,9 @@ sequenceDiagram
 ## Rate limiting
 
 `src/lib/auth.ts` maintains an **in-memory** limiter: at most **10 failed
-attempts per email address per 15-minute window**. Exceeding it throws
-"Too many failed login attempts. Please wait 15 minutes." A successful login
-clears the counter for that email.
+attempts per identifier (email or username) per 15-minute window**. Exceeding it
+throws "Too many failed login attempts. Please wait 15 minutes." A successful
+login clears the counter for that identifier.
 
 ::: warning Single-instance limitation
 The limiter is a plain in-memory `Map`. It resets on server restart and is **not

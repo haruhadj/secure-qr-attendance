@@ -29,7 +29,9 @@ subject cannot be deleted while it has enrollments or attendance records.
 
 ### Students
 Add, edit, and remove students, and manage each student's **subject
-enrollments**. You can also:
+enrollments**. Every field — **name, email, username, student ID, and
+section** — is editable from the student's **Edit** form, so improvised or
+imported details can be corrected later. You can also:
 
 - **Reset a student's password** to a temporary value.
 - **Regenerate a student's QR token** if their code is lost or compromised.
@@ -37,7 +39,10 @@ enrollments**. You can also:
 
 ::: tip New student defaults
 When you add a student manually, their **initial password is their student ID**,
-and a QR token is generated automatically.
+and a QR token is generated automatically. **Email is optional** — leave it blank
+if unknown. A login **username** is auto-derived from the name
+(`Michael G. Fernandez` → `michaelfernandez`) unless you type your own; students
+sign in with either their email or username.
 :::
 
 ## Bulk import (CSV)

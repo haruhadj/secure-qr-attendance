@@ -37,7 +37,7 @@ subjects appears on three rows; the importer groups them automatically by
 | `subject_units` | Units for the subject | `3` |
 | `schedule_day` | Day code; shorthand is expanded (see below) | `MWF` |
 | `schedule_time` | Time range | `09:00-10:30` |
-| `student_email` | Student email (auto-handled if blank) | `clara@student.com` |
+| `student_email` | Student email. **Optional** — left blank when absent; the student still gets a login username derived from their name. | `clara@student.com` |
 
 ### Schedule-day shorthand
 
@@ -66,7 +66,7 @@ times.
 | **Section** | Created with its adviser | Reused; adviser reassigned if changed (`name`) |
 | **Teacher/Adviser** | Account created, default password `teacher123` | Reused (`email`) |
 | **Subject** | Created | Updated: name, teacher, units, schedule (`code`) |
-| **Student** | Account created; password = student ID; QR token generated | Section & name updated (`student_id`) |
+| **Student** | Account created; password = student ID; QR token generated; **username derived from name** | Section & name updated (`student_id`) |
 | **Enrollment** | Created if missing | Skipped if already enrolled |
 
 ### Account defaults created by import
@@ -74,7 +74,15 @@ times.
 | Role | Login | Initial password |
 |---|---|---|
 | Teacher (new) | Their email | `teacher123` |
-| Student (new) | Their email (or `null` if blank) | Their student ID (e.g. `2026-101`) |
+| Student (new) | Their email **or** a name-derived username (e.g. `Michael G. Fernandez` → `michaelfernandez`) | Their student ID (e.g. `2026-101`) |
+
+::: tip Name-derived usernames
+Each new student gets a unique login **username** built from their first and
+last name (middle names/initials dropped, lowercased, symbols stripped; a numeric
+suffix is added on collision). So students imported with only a name and section
+can still sign in — with their username and their student ID as the password.
+Admins can view and edit the username on the student's **Edit** form.
+:::
 
 ## Import steps
 

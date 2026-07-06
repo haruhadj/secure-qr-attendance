@@ -15,7 +15,7 @@ Create a `.csv` file (using Excel, Google Sheets, or any spreadsheet tool) with 
 | `teacher_email` | ✅ Yes | Teacher's school email (used as login) | `julian@school.com` |
 | `student_id` | ✅ Yes | Student LRN or ID number | `2026-001` |
 | `student_name` | ✅ Yes | Full name of the student | `Alice Sterling` |
-| `student_email` | ❌ Optional | Student's email (auto-generated if blank) | `alice@student.com` |
+| `student_email` | ❌ Optional | Student's email. Left blank when absent; a login username is derived from the name instead. | `alice@student.com` |
 | `year_level` | ❌ Optional | Grade or year level | `Grade 10` |
 | `school_year` | ❌ Optional | Academic year | `2026-2027` |
 
@@ -44,16 +44,16 @@ Grade 11 - Einstein,Ms. Sarah Lopez,sarah@school.com,2026-005,Emma Wilson,,Grade
 ### Students
 - If a **student already exists** (matched by Student ID), their section assignment will be **updated** — no duplicate will be created.
 - If the student is **new**, a full account will be created automatically with:
-  - **Username:** Their Student ID (e.g., `2026-001`)
+  - **Username:** Derived from their name — e.g., `Michael G. Fernandez` → `michaelfernandez` (made unique with a numeric suffix if needed)
   - **Default Password:** Their Student ID (e.g., `2026-001`)
   - **QR Code:** Automatically generated
-- If `student_email` is left blank, the system will auto-generate one as `{student_id}@student.local`.
+- If `student_email` is left blank, it simply stays empty — the name-derived username is the student's login handle.
 
 ### Credentials
-| Role | Login Username | Default Password |
+| Role | Login | Default Password |
 |---|---|---|
 | Teacher (new) | Teacher email | `teacher123` |
-| Student (new) | Student email | Student ID (e.g., `2026-001`) |
+| Student (new) | Student email **or** name-derived username | Student ID (e.g., `2026-001`) |
 
 > ⚠️ **Security:** All users should change their default password after first login.
 

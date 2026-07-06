@@ -27,7 +27,7 @@ Writes (all **ADMIN** unless noted):
 
 | Action | Purpose |
 |---|---|
-| `addStudent` / `updateStudent` / `removeStudent` | Student CRUD (creates/deletes the linked `User`). |
+| `addStudent` / `updateStudent` / `removeStudent` | Student CRUD (creates/deletes the linked `User`). Email is optional; a login **username** is resolved via `src/lib/username.ts` — kept if supplied, otherwise derived from the name and made unique. |
 | `addSection` / `updateSection` / `removeSection` | Section CRUD (blocks delete if students remain). |
 | `addSubject` / `updateSubject` / `removeSubject` | Subject CRUD (blocks delete if enrollments/attendance exist). |
 | `enrollStudentInSubject` / `unenrollStudentFromSubject` / `updateStudentEnrollments` | Manage enrollments. |
