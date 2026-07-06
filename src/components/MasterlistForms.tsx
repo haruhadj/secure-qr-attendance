@@ -88,15 +88,15 @@ export function AddStudentForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
             <Input
               id="email"
               type="email"
               placeholder="juan@student.com"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              required
             />
+            <p className="text-[11px] text-muted-foreground/60">Leave blank if unknown — you can add it later.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="sid">Student ID</Label>
@@ -462,13 +462,13 @@ export function EditStudentModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`eemail-${student.id}`}>Email</Label>
+              <Label htmlFor={`eemail-${student.id}`}>Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
                 id={`eemail-${student.id}`}
                 type="email"
+                placeholder="Leave blank if unknown"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                required
               />
             </div>
             <div className="space-y-2">

@@ -117,7 +117,7 @@ export async function getSubjectMasterlist(subjectId: string, date?: Date) {
 
 export async function addStudent(data: {
   name: string;
-  email: string;
+  email?: string;
   studentId: string;
   sectionId: string;
 }) {
@@ -126,12 +126,18 @@ export async function addStudent(data: {
     throw new Error("Unauthorized");
   }
 
+  // Email is optional — imported students often have only a name and section.
+  // Normalize empty input to null so the unique constraint isn't tripped by "".
+  const email = data.email?.trim() || null;
+
   // Check for duplicates
-  const existingEmail = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
-  if (existingEmail) {
-    return { success: false, message: "A user with this email already exists." };
+  if (email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingEmail) {
+      return { success: false, message: "A user with this email already exists." };
+    }
   }
 
   const existingId = await prisma.student.findUnique({
@@ -148,7 +154,7 @@ export async function addStudent(data: {
     const user = await tx.user.create({
       data: {
         name: data.name,
-        email: data.email,
+        email,
         password: hashedPassword,
         role: UserRole.STUDENT,
       },
@@ -287,7 +293,7 @@ export async function removeSection(sectionId: string) {
 
 export async function updateStudent(
   studentDbId: string,
-  data: { name: string; email: string; studentId: string; sectionId: string }
+  data: { name: string; email?: string; studentId: string; sectionId: string }
 ) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -301,8 +307,12 @@ export async function updateStudent(
 
   if (!student) return { success: false, message: "Student not found." };
 
-  if (data.email !== student.user.email) {
-    const existingEmail = await prisma.user.findUnique({ where: { email: data.email } });
+  // Email is optional — normalize empty input to null so a blank value can be
+  // saved without colliding with the unique constraint (multiple "" would clash).
+  const email = data.email?.trim() || null;
+
+  if (email && email !== student.user.email) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
     if (existingEmail) return { success: false, message: "Email already in use." };
   }
 
@@ -314,7 +324,7 @@ export async function updateStudent(
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: student.userId },
-      data: { name: data.name, email: data.email },
+      data: { name: data.name, email },
     });
     await tx.student.update({
       where: { id: studentDbId },
