@@ -32,6 +32,7 @@ export function AddStudentForm({
     username: "",
     studentId: "",
     sectionId: initialSectionId || sections[0]?.id || "",
+    yearLevel: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +47,8 @@ export function AddStudentForm({
           email: "",
           username: "",
           studentId: "",
-          sectionId: initialSectionId || sections[0]?.id || ""
+          sectionId: initialSectionId || sections[0]?.id || "",
+          yearLevel: "",
         });
         setOpen(false);
       } else {
@@ -121,6 +123,15 @@ export function AddStudentForm({
               required
             />
             <p className="text-[11px] text-muted-foreground/60">Default login password will be their Student ID.</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="yearLevel">Year Level <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <Input
+              id="yearLevel"
+              placeholder="Grade 10"
+              value={form.yearLevel}
+              onChange={(e) => setForm((f) => ({ ...f, yearLevel: e.target.value }))}
+            />
           </div>
           {!initialSectionId && (
             <div className="space-y-2">
@@ -360,7 +371,7 @@ export function EditStudentModal({
   student,
   sections,
 }: {
-  student: { id: string; studentId: string; sectionId: string | null; user: { name: string | null; email: string | null; username?: string | null } };
+  student: { id: string; studentId: string; sectionId: string | null; yearLevel?: string | null; user: { name: string | null; email: string | null; username?: string | null } };
   sections: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -378,6 +389,7 @@ export function EditStudentModal({
     username: student.user.username || "",
     studentId: student.studentId,
     sectionId: student.sectionId || "",
+    yearLevel: student.yearLevel || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -502,6 +514,15 @@ export function EditStudentModal({
                 value={form.studentId}
                 onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`eyearlevel-${student.id}`}>Year Level <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input
+                id={`eyearlevel-${student.id}`}
+                placeholder="Grade 10"
+                value={form.yearLevel}
+                onChange={(e) => setForm((f) => ({ ...f, yearLevel: e.target.value }))}
               />
             </div>
             <div className="space-y-2">

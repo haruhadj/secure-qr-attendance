@@ -11,7 +11,7 @@
  *   student_id, student_name
  *
  * Optional columns:
- *   subject_units, schedule_day, schedule_time, student_email
+ *   subject_units, schedule_day, schedule_time, student_email, year_level
  */
 
 export interface ParsedSection {
@@ -35,6 +35,7 @@ export interface ParsedStudent {
   studentName: string;
   studentEmail?: string;
   sectionName?: string;
+  yearLevel?: string;
   subjectCodes: string[];
 }
 
@@ -51,7 +52,7 @@ const REQUIRED_COLUMNS = [
   "subject_code", "subject_name", "subject_teacher_name", "subject_teacher_email",
   "student_id", "student_name",
 ];
-const OPTIONAL_COLUMNS = ["subject_units", "schedule_day", "schedule_time", "student_email"];
+const OPTIONAL_COLUMNS = ["subject_units", "schedule_day", "schedule_time", "student_email", "year_level"];
 const ALL_COLUMNS = [...REQUIRED_COLUMNS, ...OPTIONAL_COLUMNS];
 
 const DAY_EXPANSIONS: Record<string, string> = {
@@ -125,6 +126,7 @@ export function parseMasterlistCSV(csvText: string): ParsedMasterlist {
     const studentId         = get("student_id");
     const studentName       = get("student_name");
     const studentEmail      = get("student_email") || undefined;
+    const yearLevel         = get("year_level") || undefined;
     const subjectUnitsStr   = get("subject_units");
     const rawScheduleDay    = get("schedule_day");
     const scheduleDay       = rawScheduleDay ? normalizeScheduleDay(rawScheduleDay) : undefined;
@@ -168,6 +170,7 @@ export function parseMasterlistCSV(csvText: string): ParsedMasterlist {
         studentName,
         studentEmail,
         sectionName,
+        yearLevel,
         subjectCodes: [],
       });
     }
@@ -175,8 +178,9 @@ export function parseMasterlistCSV(csvText: string): ParsedMasterlist {
     if (!student.subjectCodes.includes(subjectCode)) {
       student.subjectCodes.push(subjectCode);
     }
-    // Keep the most recent name if repeated
+    // Keep the most recent name/year level if repeated
     if (studentName) student.studentName = studentName;
+    if (yearLevel) student.yearLevel = yearLevel;
   }
 
   const students = Array.from(studentMap.values());

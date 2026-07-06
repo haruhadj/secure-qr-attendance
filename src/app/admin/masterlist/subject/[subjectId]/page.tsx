@@ -116,6 +116,7 @@ export default async function SubjectMasterlist({
                   <TableHead className="w-[110px]">Student ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="hidden md:table-cell w-[110px]">Year Level</TableHead>
                   <TableHead className="w-[90px]">Status</TableHead>
                   <TableHead className="hidden sm:table-cell w-[70px]">Time</TableHead>
                   <TableHead className="w-[120px]"></TableHead>
@@ -138,6 +139,9 @@ export default async function SubjectMasterlist({
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                         {student.user.email}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                        {student.yearLevel || <span className="text-muted-foreground/30">—</span>}
                       </TableCell>
                       <TableCell>
                         {attendance ? (
@@ -203,7 +207,7 @@ export default async function SubjectMasterlist({
                 })}
                 {students.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground italic">
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground italic">
                       No students enrolled in this subject yet.
                     </TableCell>
                   </TableRow>

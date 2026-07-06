@@ -75,6 +75,7 @@ model Student {
   user            User             @relation(fields: [userId], references: [id])
   sectionId       String?
   section         Section?         @relation(fields: [sectionId], references: [id])
+  yearLevel       String?          // e.g., Grade 10, 1st Year College
   attendances     Attendance[]
   appeals         Appeal[]
   enrolledSubjects StudentSubject[]

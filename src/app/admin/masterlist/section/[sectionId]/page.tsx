@@ -106,6 +106,7 @@ export default async function SectionMasterlist({
                   <TableHead className="w-[110px]">Student ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
+                  <TableHead className="hidden md:table-cell w-[110px]">Year Level</TableHead>
                   <TableHead className="w-[130px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -124,6 +125,9 @@ export default async function SectionMasterlist({
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                       {student.user.email}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                      {student.yearLevel || <span className="text-muted-foreground/30">—</span>}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
@@ -151,7 +155,7 @@ export default async function SectionMasterlist({
                 ))}
                 {students.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-12 text-muted-foreground italic">
+                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground italic">
                       No students in this section yet.
                     </TableCell>
                   </TableRow>

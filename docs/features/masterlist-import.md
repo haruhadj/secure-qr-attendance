@@ -38,6 +38,7 @@ subjects appears on three rows; the importer groups them automatically by
 | `schedule_day` | Day code; shorthand is expanded (see below) | `MWF` |
 | `schedule_time` | Time range | `09:00-10:30` |
 | `student_email` | Student email (auto-handled if blank) | `clara@student.com` |
+| `year_level` | Student's grade/year level | `2nd Year College` |
 
 ### Schedule-day shorthand
 
@@ -48,9 +49,9 @@ subjects appears on three rows; the importer groups them automatically by
 ## Example
 
 ```csv
-section_name,adviser_name,adviser_email,subject_code,subject_name,subject_teacher_name,subject_teacher_email,subject_units,schedule_day,schedule_time,student_id,student_name,student_email
-BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-101,Clara Mendoza,clara@student.com
-BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-101,Clara Mendoza,clara@student.com
+section_name,adviser_name,adviser_email,subject_code,subject_name,subject_teacher_name,subject_teacher_email,subject_units,schedule_day,schedule_time,student_id,student_name,student_email,year_level
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,NET201,Data Communications,Engr. Torres,torres@school.com,3,MWF,09:00-10:30,2026-101,Clara Mendoza,clara@student.com,2nd Year College
+BSIT 2nd Year,Ms. Alcantara,alcantara@school.com,WEB202,Web Development,Prof. Garcia,garcia@school.com,3,TTh,13:00-14:30,2026-101,Clara Mendoza,clara@student.com,2nd Year College
 ```
 
 Here Clara appears twice — once per subject — and ends up enrolled in both.
@@ -66,7 +67,7 @@ times.
 | **Section** | Created with its adviser | Reused; adviser reassigned if changed (`name`) |
 | **Teacher/Adviser** | Account created, default password `teacher123` | Reused (`email`) |
 | **Subject** | Created | Updated: name, teacher, units, schedule (`code`) |
-| **Student** | Account created; password = student ID; QR token generated | Section & name updated (`student_id`) |
+| **Student** | Account created; password = student ID; QR token generated | Section, name & year level updated (`student_id`) |
 | **Enrollment** | Created if missing | Skipped if already enrolled |
 
 ### Account defaults created by import

@@ -122,6 +122,7 @@ export async function addStudent(data: {
   username?: string;
   studentId: string;
   sectionId: string;
+  yearLevel?: string;
 }) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -177,6 +178,7 @@ export async function addStudent(data: {
         qrToken: crypto.randomUUID(),
         userId: user.id,
         sectionId: data.sectionId,
+        yearLevel: data.yearLevel?.trim() || null,
       },
     });
   });
@@ -304,7 +306,7 @@ export async function removeSection(sectionId: string) {
 
 export async function updateStudent(
   studentDbId: string,
-  data: { name: string; email?: string; username?: string; studentId: string; sectionId: string }
+  data: { name: string; email?: string; username?: string; studentId: string; sectionId: string; yearLevel?: string }
 ) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -347,7 +349,7 @@ export async function updateStudent(
     });
     await tx.student.update({
       where: { id: studentDbId },
-      data: { studentId: data.studentId, sectionId: data.sectionId || null },
+      data: { studentId: data.studentId, sectionId: data.sectionId || null, yearLevel: data.yearLevel?.trim() || null },
     });
   });
 
@@ -769,6 +771,9 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
             if (sectionRecord && studentRecord.sectionId !== sectionRecord.id) {
               await prisma.student.update({ where: { id: studentRecord.id }, data: { sectionId: sectionRecord.id } });
             }
+            if (studentData.yearLevel && studentData.yearLevel !== studentRecord.yearLevel) {
+              await prisma.student.update({ where: { id: studentRecord.id }, data: { yearLevel: studentData.yearLevel } });
+            }
             if (studentData.studentName && studentData.studentName !== studentRecord.user.name) {
               await prisma.user.update({ where: { id: studentRecord.userId }, data: { name: studentData.studentName } });
             }
@@ -797,7 +802,7 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
               },
             });
             studentRecord = await prisma.student.create({
-              data: { studentId: studentData.studentId, qrToken: crypto.randomUUID(), userId: newUser.id, sectionId: sectionRecord?.id ?? null },
+              data: { studentId: studentData.studentId, qrToken: crypto.randomUUID(), userId: newUser.id, sectionId: sectionRecord?.id ?? null, yearLevel: studentData.yearLevel ?? null },
               include: { user: true },
             });
             summary.studentsCreated++;

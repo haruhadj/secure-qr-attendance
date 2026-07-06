@@ -245,14 +245,15 @@ export function ImportMasterlist() {
               {/* Students preview */}
               {expandTab === "students" && (
                 <div className="border border-border rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 border-b border-border">
-                    <span>ID</span><span>Name</span><span>Email</span><span>Subjects</span>
+                  <div className="grid grid-cols-[1fr_2fr_2fr_1fr_1fr] gap-1 text-xs font-medium text-muted-foreground px-3 py-2 bg-muted/50 border-b border-border">
+                    <span>ID</span><span>Name</span><span>Email</span><span>Year Level</span><span>Subjects</span>
                   </div>
                   {parsed.students.map((s) => (
-                    <div key={s.studentId} className="grid grid-cols-[1fr_2fr_2fr_1fr] gap-1 text-xs px-3 py-2 border-b border-border/50 last:border-0">
+                    <div key={s.studentId} className="grid grid-cols-[1fr_2fr_2fr_1fr_1fr] gap-1 text-xs px-3 py-2 border-b border-border/50 last:border-0">
                       <span className="font-mono">{s.studentId}</span>
                       <span className="text-foreground">{s.studentName}</span>
                       <span className="text-muted-foreground truncate">{s.studentEmail ?? "—"}</span>
+                      <span className="text-muted-foreground">{s.yearLevel ?? "—"}</span>
                       <span className="text-muted-foreground">{s.subjectCodes.length}</span>
                     </div>
                   ))}
