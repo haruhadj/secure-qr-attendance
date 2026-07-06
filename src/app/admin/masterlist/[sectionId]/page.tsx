@@ -131,7 +131,10 @@ export default async function SectionMasterlist({
                         {student.studentId}
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
-                        {student.user.name}
+                        <div>{student.user.name}</div>
+                        {student.user.username && (
+                          <div className="text-xs text-muted-foreground font-mono">@{student.user.username}</div>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {student.user.email}

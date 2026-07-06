@@ -131,6 +131,9 @@ export default async function SubjectMasterlist({
                       </TableCell>
                       <TableCell className="font-medium text-foreground">
                         <div>{student.user.name}</div>
+                        {student.user.username && (
+                          <div className="text-xs text-muted-foreground font-mono">@{student.user.username}</div>
+                        )}
                         <div className="md:hidden text-xs text-muted-foreground truncate max-w-[140px]">{student.user.email}</div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-muted-foreground text-sm">

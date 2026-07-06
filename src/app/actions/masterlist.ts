@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { logActivity } from "@/src/lib/audit";
 import type { ParsedSection, ParsedMasterlist } from "@/src/lib/csvParser";
 import { getUTCMidnight } from "@/src/lib/date";
+import { resolveUsername, generateUniqueUsername } from "@/src/lib/username";
 
 export async function getMasterlist() {
   const session = await getServerSession(authOptions);
@@ -118,6 +119,7 @@ export async function getSubjectMasterlist(subjectId: string, date?: Date) {
 export async function addStudent(data: {
   name: string;
   email?: string;
+  username?: string;
   studentId: string;
   sectionId: string;
 }) {
@@ -147,6 +149,14 @@ export async function addStudent(data: {
     return { success: false, message: "A student with this ID already exists." };
   }
 
+  // Resolve a login username: use the admin's value if given, otherwise derive
+  // one from the name (e.g. "Michael G. Fernandez" -> "michaelfernandez").
+  const usernameResult = await resolveUsername(prisma, data.username, data.name);
+  if ("error" in usernameResult) {
+    return { success: false, message: usernameResult.error };
+  }
+  const username = usernameResult.username;
+
   const bcrypt = require("bcryptjs");
   const hashedPassword = bcrypt.hashSync(data.studentId, 10);
 
@@ -155,6 +165,7 @@ export async function addStudent(data: {
       data: {
         name: data.name,
         email,
+        username,
         password: hashedPassword,
         role: UserRole.STUDENT,
       },
@@ -293,7 +304,7 @@ export async function removeSection(sectionId: string) {
 
 export async function updateStudent(
   studentDbId: string,
-  data: { name: string; email?: string; studentId: string; sectionId: string }
+  data: { name: string; email?: string; username?: string; studentId: string; sectionId: string }
 ) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -321,10 +332,18 @@ export async function updateStudent(
     if (existingId) return { success: false, message: "Student ID already in use." };
   }
 
+  // Resolve the login username: keep the admin's value if provided, otherwise
+  // (re)derive one from the name so it's never left blank.
+  const usernameResult = await resolveUsername(prisma, data.username, data.name, student.userId);
+  if ("error" in usernameResult) {
+    return { success: false, message: usernameResult.error };
+  }
+  const username = usernameResult.username;
+
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: student.userId },
-      data: { name: data.name, email },
+      data: { name: data.name, email, username },
     });
     await tx.student.update({
       where: { id: studentDbId },
@@ -764,10 +783,15 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
               continue;
             }
 
+            // Derive a login username from the name so imported students can
+            // sign in even when the sheet only had a name and section.
+            const username = await generateUniqueUsername(prisma, studentData.studentName);
+
             const newUser = await prisma.user.create({
               data: {
                 name: studentData.studentName,
                 email: studentData.studentEmail || null,
+                username,
                 password: studentPasswordMap.get(studentData.studentId) ?? bcrypt.hashSync(studentData.studentId, 10),
                 role: UserRole.STUDENT,
               },

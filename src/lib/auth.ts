@@ -48,19 +48,24 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
+        email: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const key = getRateLimitKey(credentials.email);
+        const identifier = credentials.email.trim();
+        const key = getRateLimitKey(identifier);
         if (isRateLimited(key)) {
           throw new Error("Too many failed login attempts. Please wait 15 minutes.");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        // Students imported without an email log in with a name-derived username
+        // (usernames are stored lowercase), so accept either identifier here.
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [{ email: identifier }, { username: identifier.toLowerCase() }],
+          },
         });
 
         if (!user || !user.password) {

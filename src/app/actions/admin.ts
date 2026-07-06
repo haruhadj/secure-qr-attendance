@@ -201,7 +201,7 @@ export async function exportAllData() {
     }),
     prisma.student.findMany({
       include: {
-        user: { select: { id: true, name: true, email: true, role: true } },
+        user: { select: { id: true, name: true, email: true, username: true, role: true } },
         section: { select: { id: true, name: true } },
       },
     }),

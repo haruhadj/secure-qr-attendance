@@ -80,7 +80,7 @@ export default function Home() {
         if (result.error.includes("Too many")) {
           toast.error("Too many failed attempts. Please wait 15 minutes before trying again.");
         } else {
-          toast.error("Invalid credentials. Please check your email and password.");
+          toast.error("Invalid credentials. Please check your email/username and password.");
         }
       } else {
         toast.success("Logged in successfully! Redirecting...");
@@ -126,16 +126,16 @@ export default function Home() {
           <Card className={`border-none shadow-xl shadow-border/5 transition-colors ${hasError ? 'ring-2 ring-destructive/20' : ''}`}>
             <CardHeader>
               <CardTitle>Sign In</CardTitle>
-              <CardDescription>Enter your school email to access your dashboard</CardDescription>
+              <CardDescription>Enter your school email or username to access your dashboard</CardDescription>
             </CardHeader>
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className={emailError ? "text-destructive" : ""}>Email</Label>
+                  <Label htmlFor="email" className={emailError ? "text-destructive" : ""}>Email or Username</Label>
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="name@school.com"
+                    type="text"
+                    placeholder="name@school.com or username"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);

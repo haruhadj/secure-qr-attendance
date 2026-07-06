@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { toast } from "sonner";
 import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen, BookMarked } from "lucide-react";
 import { formatDate } from "@/src/lib/date";
+import { deriveUsername } from "@/src/lib/username";
 import { QRCodeSVG } from "qrcode.react";
 
 interface Section {
@@ -28,6 +29,7 @@ export function AddStudentForm({
   const [form, setForm] = useState({
     name: "",
     email: "",
+    username: "",
     studentId: "",
     sectionId: initialSectionId || sections[0]?.id || "",
   });
@@ -39,11 +41,12 @@ export function AddStudentForm({
       const result = await addStudent(form);
       if (result.success) {
         toast.success(result.message);
-        setForm({ 
-          name: "", 
-          email: "", 
-          studentId: "", 
-          sectionId: initialSectionId || sections[0]?.id || "" 
+        setForm({
+          name: "",
+          email: "",
+          username: "",
+          studentId: "",
+          sectionId: initialSectionId || sections[0]?.id || ""
         });
         setOpen(false);
       } else {
@@ -97,6 +100,16 @@ export function AddStudentForm({
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
             <p className="text-[11px] text-muted-foreground/60">Leave blank if unknown — you can add it later.</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">Username <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <Input
+              id="username"
+              placeholder={deriveUsername(form.name) || "michaelfernandez"}
+              value={form.username}
+              onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+            />
+            <p className="text-[11px] text-muted-foreground/60">Used to log in. Defaults to first + last name if blank.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="sid">Student ID</Label>
@@ -347,7 +360,7 @@ export function EditStudentModal({
   student,
   sections,
 }: {
-  student: { id: string; studentId: string; sectionId: string | null; user: { name: string | null; email: string | null } };
+  student: { id: string; studentId: string; sectionId: string | null; user: { name: string | null; email: string | null; username?: string | null } };
   sections: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -362,6 +375,7 @@ export function EditStudentModal({
   const [form, setForm] = useState({
     name: student.user.name || "",
     email: student.user.email || "",
+    username: student.user.username || "",
     studentId: student.studentId,
     sectionId: student.sectionId || "",
   });
@@ -470,6 +484,16 @@ export function EditStudentModal({
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`eusername-${student.id}`}>Username</Label>
+              <Input
+                id={`eusername-${student.id}`}
+                placeholder={deriveUsername(form.name) || "michaelfernandez"}
+                value={form.username}
+                onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+              />
+              <p className="text-[11px] text-muted-foreground/60">Login handle. Leave blank to regenerate from the name.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor={`esid-${student.id}`}>Student ID</Label>
