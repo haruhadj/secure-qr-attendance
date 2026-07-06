@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { logActivity } from "@/src/lib/audit";
 import type { ParsedSection, ParsedMasterlist } from "@/src/lib/csvParser";
 import { getUTCMidnight } from "@/src/lib/date";
+import { resolveUsername, generateUniqueUsername } from "@/src/lib/username";
 
 export async function getMasterlist() {
   const session = await getServerSession(authOptions);
@@ -117,7 +118,8 @@ export async function getSubjectMasterlist(subjectId: string, date?: Date) {
 
 export async function addStudent(data: {
   name: string;
-  email: string;
+  email?: string;
+  username?: string;
   studentId: string;
   sectionId: string;
 }) {
@@ -126,12 +128,18 @@ export async function addStudent(data: {
     throw new Error("Unauthorized");
   }
 
+  // Email is optional — imported students often have only a name and section.
+  // Normalize empty input to null so the unique constraint isn't tripped by "".
+  const email = data.email?.trim() || null;
+
   // Check for duplicates
-  const existingEmail = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
-  if (existingEmail) {
-    return { success: false, message: "A user with this email already exists." };
+  if (email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingEmail) {
+      return { success: false, message: "A user with this email already exists." };
+    }
   }
 
   const existingId = await prisma.student.findUnique({
@@ -141,6 +149,14 @@ export async function addStudent(data: {
     return { success: false, message: "A student with this ID already exists." };
   }
 
+  // Resolve a login username: use the admin's value if given, otherwise derive
+  // one from the name (e.g. "Michael G. Fernandez" -> "michaelfernandez").
+  const usernameResult = await resolveUsername(prisma, data.username, data.name);
+  if ("error" in usernameResult) {
+    return { success: false, message: usernameResult.error };
+  }
+  const username = usernameResult.username;
+
   const bcrypt = require("bcryptjs");
   const hashedPassword = bcrypt.hashSync(data.studentId, 10);
 
@@ -148,7 +164,8 @@ export async function addStudent(data: {
     const user = await tx.user.create({
       data: {
         name: data.name,
-        email: data.email,
+        email,
+        username,
         password: hashedPassword,
         role: UserRole.STUDENT,
       },
@@ -287,7 +304,7 @@ export async function removeSection(sectionId: string) {
 
 export async function updateStudent(
   studentDbId: string,
-  data: { name: string; email: string; studentId: string; sectionId: string }
+  data: { name: string; email?: string; username?: string; studentId: string; sectionId: string }
 ) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -301,8 +318,12 @@ export async function updateStudent(
 
   if (!student) return { success: false, message: "Student not found." };
 
-  if (data.email !== student.user.email) {
-    const existingEmail = await prisma.user.findUnique({ where: { email: data.email } });
+  // Email is optional — normalize empty input to null so a blank value can be
+  // saved without colliding with the unique constraint (multiple "" would clash).
+  const email = data.email?.trim() || null;
+
+  if (email && email !== student.user.email) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
     if (existingEmail) return { success: false, message: "Email already in use." };
   }
 
@@ -311,10 +332,18 @@ export async function updateStudent(
     if (existingId) return { success: false, message: "Student ID already in use." };
   }
 
+  // Resolve the login username: keep the admin's value if provided, otherwise
+  // (re)derive one from the name so it's never left blank.
+  const usernameResult = await resolveUsername(prisma, data.username, data.name, student.userId);
+  if ("error" in usernameResult) {
+    return { success: false, message: usernameResult.error };
+  }
+  const username = usernameResult.username;
+
   await prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: student.userId },
-      data: { name: data.name, email: data.email },
+      data: { name: data.name, email, username },
     });
     await tx.student.update({
       where: { id: studentDbId },
@@ -754,10 +783,15 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
               continue;
             }
 
+            // Derive a login username from the name so imported students can
+            // sign in even when the sheet only had a name and section.
+            const username = await generateUniqueUsername(prisma, studentData.studentName);
+
             const newUser = await prisma.user.create({
               data: {
                 name: studentData.studentName,
                 email: studentData.studentEmail || null,
+                username,
                 password: studentPasswordMap.get(studentData.studentId) ?? bcrypt.hashSync(studentData.studentId, 10),
                 role: UserRole.STUDENT,
               },
