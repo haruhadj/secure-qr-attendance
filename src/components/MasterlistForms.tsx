@@ -11,6 +11,7 @@ import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, Refresh
 import { formatDate } from "@/src/lib/date";
 import { deriveUsername } from "@/src/lib/username";
 import { QRCodeSVG } from "qrcode.react";
+import { QrDownloadButton } from "@/src/components/QrDownloadButton";
 
 interface Section {
   id: string;
@@ -900,9 +901,15 @@ export function DeleteAttendanceButton({
 export function ViewQrModal({
   studentName,
   qrToken,
+  studentId,
+  section,
+  yearLevel,
 }: {
   studentName: string;
   qrToken: string;
+  studentId?: string;
+  section?: string | null;
+  yearLevel?: string | null;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -959,6 +966,15 @@ export function ViewQrModal({
             <code className="text-xs font-mono bg-muted px-3 py-1.5 rounded-full text-muted-foreground">
               {qrToken}
             </code>
+          </div>
+          <div className="mt-5 mb-2">
+            <QrDownloadButton
+              qrToken={qrToken}
+              studentName={studentName}
+              studentId={studentId ?? ""}
+              section={section}
+              yearLevel={yearLevel}
+            />
           </div>
         </CardContent>
       </Card>

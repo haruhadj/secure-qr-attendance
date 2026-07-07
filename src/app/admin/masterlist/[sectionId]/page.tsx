@@ -171,6 +171,9 @@ export default async function SectionMasterlist({
                           <ViewQrModal
                             studentName={student.user.name || "Unknown"}
                             qrToken={student.qrToken}
+                            studentId={student.studentId}
+                            section={section.name}
+                            yearLevel={student.yearLevel}
                           />
                           <EditStudentModal
                             student={student}

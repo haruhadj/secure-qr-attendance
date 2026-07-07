@@ -21,6 +21,7 @@ import AttendanceCalendar from "@/src/components/AttendanceCalendar";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 import ChangeUsernameForm from "@/src/components/ChangeUsernameForm";
 import ChangeEmailForm from "@/src/components/ChangeEmailForm";
+import { QrDownloadButton } from "@/src/components/QrDownloadButton";
 
 export default async function StudentDashboard() {
   const session = await getServerSession(authOptions);
@@ -201,6 +202,15 @@ export default async function StudentDashboard() {
                 <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/50">
                   PERSONAL QR TOKEN
                 </p>
+              </div>
+              <div className="mt-5 w-full flex justify-center">
+                <QrDownloadButton
+                  qrToken={student.qrToken}
+                  studentName={student.user.name ?? "Student"}
+                  studentId={student.studentId}
+                  section={student.section?.name}
+                  yearLevel={student.yearLevel}
+                />
               </div>
             </CardContent>
           </Card>

@@ -19,7 +19,8 @@ import {
   bulkSetStudentsSubject,
   bulkResetStudentPasswords,
 } from "@/src/app/actions/masterlist";
-import { Trash2, FolderInput, BookOpen, KeyRound, Loader2, X } from "lucide-react";
+import { Trash2, FolderInput, BookOpen, KeyRound, Loader2, X, QrCode } from "lucide-react";
+import { BulkQrDownload, type BulkQrStudent } from "@/src/components/BulkQrDownload";
 
 interface StudentRow {
   id: string;
@@ -37,7 +38,7 @@ interface Props {
   subjects: { id: string; code: string; name: string }[];
 }
 
-type BulkAction = "delete" | "move" | "subject" | "reset";
+type BulkAction = "delete" | "move" | "subject" | "reset" | "downloadQr";
 
 export default function StudentMasterlistTable({ students, sections, subjects }: Props) {
   const router = useRouter();
@@ -49,6 +50,10 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
   const [targetSectionId, setTargetSectionId] = useState("");
   const [targetSubjectId, setTargetSubjectId] = useState("");
   const [subjectMode, setSubjectMode] = useState<"enroll" | "unenroll">("enroll");
+  const [qrFormat, setQrFormat] = useState<"sheet" | "zip">("sheet");
+
+  // Active bulk QR download job (snapshot of selected students + chosen format).
+  const [qrJob, setQrJob] = useState<{ students: BulkQrStudent[]; format: "sheet" | "zip" } | null>(null);
 
   const ids = useMemo(() => Array.from(selected), [selected]);
   const allSelected = students.length > 0 && selected.size === students.length;
@@ -99,6 +104,19 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
         finish(await bulkSetStudentsSubject(ids, targetSubjectId, subjectMode === "enroll"));
       } else if (action === "reset") {
         finish(await bulkResetStudentPasswords(ids));
+      } else if (action === "downloadQr") {
+        const job = students
+          .filter((s) => selected.has(s.id))
+          .map<BulkQrStudent>((s) => ({
+            id: s.id,
+            qrToken: s.qrToken,
+            studentName: s.user.name || "Unknown",
+            studentId: s.studentId,
+            section: sections.find((sec) => sec.id === s.sectionId)?.name,
+            yearLevel: s.yearLevel,
+          }));
+        setQrJob({ students: job, format: qrFormat });
+        closeModal();
       }
     } catch {
       toast.error("Bulk action failed.");
@@ -169,6 +187,9 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
                     <ViewQrModal
                       studentName={student.user.name || "Unknown"}
                       qrToken={student.qrToken}
+                      studentId={student.studentId}
+                      section={sections.find((s) => s.id === student.sectionId)?.name}
+                      yearLevel={student.yearLevel}
                     />
                     <EditStudentModal
                       student={student}
@@ -208,6 +229,9 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
             </Button>
             <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setAction("reset")}>
               <KeyRound className="w-4 h-4" /> Reset password
+            </Button>
+            <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setAction("downloadQr")}>
+              <QrCode className="w-4 h-4" /> Download QR
             </Button>
             <Button size="sm" variant="ghost" className="gap-1.5 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setAction("delete")}>
               <Trash2 className="w-4 h-4" /> Delete
@@ -289,6 +313,37 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
                 </p>
               </>
             )}
+            {action === "downloadQr" && (
+              <>
+                <h2 className="text-lg font-bold text-foreground">Download QR cards for {selected.size} student(s)</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Each card includes the QR code plus the student&apos;s name, ID, section and year level.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={qrFormat === "sheet" ? "default" : "outline"}
+                    onClick={() => setQrFormat("sheet")}
+                    className="flex-1"
+                  >
+                    Printable sheet
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={qrFormat === "zip" ? "default" : "outline"}
+                    onClick={() => setQrFormat("zip")}
+                    className="flex-1"
+                  >
+                    ZIP of images
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {qrFormat === "sheet"
+                    ? "One PNG with all cards in a grid — print the page and cut them out."
+                    : "A .zip containing one PNG per student, named by Student ID."}
+                </p>
+              </>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={closeModal} disabled={loading}>Cancel</Button>
@@ -299,11 +354,23 @@ export default function StudentMasterlistTable({ students, sections, subjects }:
                 disabled={loading}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {action === "delete" ? "Delete" : action === "move" ? "Move" : action === "subject" ? (subjectMode === "enroll" ? "Enroll" : "Unenroll") : "Reset"}
+                {action === "delete" ? "Delete" : action === "move" ? "Move" : action === "subject" ? (subjectMode === "enroll" ? "Enroll" : "Unenroll") : action === "downloadQr" ? "Download" : "Reset"}
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk QR generation (renders hidden QR canvases, then downloads) */}
+      {qrJob && (
+        <BulkQrDownload
+          students={qrJob.students}
+          format={qrJob.format}
+          onDone={() => {
+            setQrJob(null);
+            clearSelection();
+          }}
+        />
       )}
     </>
   );

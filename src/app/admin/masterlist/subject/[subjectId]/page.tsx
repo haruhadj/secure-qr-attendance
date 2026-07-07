@@ -191,6 +191,8 @@ export default async function SubjectMasterlist({
                           <ViewQrModal
                             studentName={student.user.name || "Unknown"}
                             qrToken={student.qrToken}
+                            studentId={student.studentId}
+                            yearLevel={student.yearLevel}
                           />
                           <EditStudentModal
                             student={student}
