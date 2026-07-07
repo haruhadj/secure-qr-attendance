@@ -73,7 +73,8 @@ export default function ExportCsvButton({ subjectId, subjectName }: { subjectId:
         );
         const cells = dates.map((d) => {
           const key = d.toISOString().slice(0, 10);
-          return attendanceMap.get(key) ?? "—";
+          // Leave days with no record blank so the CSV stays clean.
+          return attendanceMap.get(key) ?? "";
         });
         return [student.studentId, student.user.name ?? "", ...cells];
       });
@@ -82,7 +83,9 @@ export default function ExportCsvButton({ subjectId, subjectName }: { subjectId:
         .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
         .join("\n");
 
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      // Prefix a UTF-8 BOM so Excel decodes accents/special characters correctly
+      // (otherwise "—" and accented names show up as mojibake like "â€”").
+      const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

@@ -11,6 +11,7 @@ import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
+import ChangeEmailForm from "@/src/components/ChangeEmailForm";
 import ExportCsvButton from "@/src/components/ExportCsvButton";
 import SubjectSelector from "@/src/components/SubjectSelector";
 import { format } from "date-fns";
@@ -31,7 +32,7 @@ export default async function TeacherRoster({
 
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
-    include: { subjects: true },
+    include: { subjects: true, user: true },
   });
 
   if (!teacher || teacher.subjects.length === 0) {
@@ -134,7 +135,10 @@ export default async function TeacherRoster({
             />
           </CardContent>
         </Card>
-        <ChangePasswordForm />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChangeEmailForm currentEmail={teacher.user.email ?? ""} />
+          <ChangePasswordForm />
+        </div>
       </div>
     </div>
   );
