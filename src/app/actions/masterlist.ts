@@ -9,7 +9,7 @@ import crypto from "crypto";
 import { logActivity } from "@/src/lib/audit";
 import type { ParsedSection, ParsedMasterlist } from "@/src/lib/csvParser";
 import { getUTCMidnight } from "@/src/lib/date";
-import { resolveUsername, generateUniqueUsername } from "@/src/lib/username";
+import { resolveUsername, generateUniqueUsername, normalizeEmail } from "@/src/lib/username";
 
 export async function getMasterlist() {
   const session = await getServerSession(authOptions);
@@ -130,8 +130,9 @@ export async function addStudent(data: {
   }
 
   // Email is optional — imported students often have only a name and section.
-  // Normalize empty input to null so the unique constraint isn't tripped by "".
-  const email = data.email?.trim() || null;
+  // Normalize (trim + lowercase) so casing can't create duplicate rows and
+  // empty input becomes null instead of "".
+  const email = normalizeEmail(data.email);
 
   // Check for duplicates
   if (email) {
@@ -320,9 +321,10 @@ export async function updateStudent(
 
   if (!student) return { success: false, message: "Student not found." };
 
-  // Email is optional — normalize empty input to null so a blank value can be
-  // saved without colliding with the unique constraint (multiple "" would clash).
-  const email = data.email?.trim() || null;
+  // Email is optional — normalize (trim + lowercase) so a blank value becomes
+  // null (multiple "" would clash on the unique constraint) and casing can't
+  // create duplicate rows.
+  const email = normalizeEmail(data.email);
 
   if (email && email !== student.user.email) {
     const existingEmail = await prisma.user.findUnique({ where: { email } });
@@ -702,11 +704,14 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
     errors: [] as { studentId: string; message: string }[],
   };
 
-  const upsertTeacher = async (name: string, email: string) => {
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-      include: { teacher: true },
-    });
+  const upsertTeacher = async (name: string, rawEmail: string) => {
+    const email = normalizeEmail(rawEmail);
+    const existingUser = email
+      ? await prisma.user.findUnique({
+          where: { email },
+          include: { teacher: true },
+        })
+      : null;
     if (existingUser) {
       summary.teachersExisting++;
       if (existingUser.teacher) return existingUser.teacher;
@@ -779,12 +784,13 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
             }
             summary.studentsUpdated++;
           } else {
-            const existingEmail = studentData.studentEmail
-              ? await prisma.user.findUnique({ where: { email: studentData.studentEmail } })
+            const studentEmail = normalizeEmail(studentData.studentEmail);
+            const existingEmail = studentEmail
+              ? await prisma.user.findUnique({ where: { email: studentEmail } })
               : null;
 
             if (existingEmail) {
-              summary.errors.push({ studentId: studentData.studentId, message: `Email "${studentData.studentEmail}" already in use.` });
+              summary.errors.push({ studentId: studentData.studentId, message: `Email "${studentEmail}" already in use.` });
               continue;
             }
 
@@ -795,7 +801,7 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
             const newUser = await prisma.user.create({
               data: {
                 name: studentData.studentName,
-                email: studentData.studentEmail || null,
+                email: studentEmail,
                 username,
                 password: studentPasswordMap.get(studentData.studentId) ?? bcrypt.hashSync(studentData.studentId, 10),
                 role: UserRole.STUDENT,
@@ -842,6 +848,165 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
   } catch (err: any) {
     return { success: false, message: `Import failed: ${err?.message || "Unknown error"}`, summary };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk student operations — for the masterlist multi-select toolbar. Each loops
+// the existing single-item logic, collecting per-student failures so one bad
+// row (e.g. a guard failure) doesn't abort the whole batch.
+// ---------------------------------------------------------------------------
+
+interface BulkResult {
+  success: boolean;
+  message: string;
+  ok: number;
+  failed: { id: string; name: string; message: string }[];
+}
+
+async function requireAdminSession() {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).role !== UserRole.ADMIN) {
+    throw new Error("Unauthorized");
+  }
+  return session;
+}
+
+export async function bulkRemoveStudents(ids: string[]): Promise<BulkResult> {
+  await requireAdminSession();
+
+  let ok = 0;
+  const failed: BulkResult["failed"] = [];
+
+  for (const id of ids) {
+    const student = await prisma.student.findUnique({ where: { id }, include: { user: true } });
+    if (!student) {
+      failed.push({ id, name: id, message: "Student not found." });
+      continue;
+    }
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.appeal.deleteMany({ where: { studentId: id } });
+        await tx.attendance.deleteMany({ where: { studentId: id } });
+        await tx.studentSubject.deleteMany({ where: { studentId: id } });
+        await tx.student.delete({ where: { id } });
+        await tx.user.delete({ where: { id: student.userId } });
+      });
+      ok++;
+    } catch (err: any) {
+      failed.push({ id, name: student.user.name || student.studentId, message: err?.message || "Delete failed." });
+    }
+  }
+
+  await logActivity("STUDENT_BULK_REMOVE", `Bulk removed ${ok} student(s)`, { ok, failed: failed.length });
+  revalidatePath("/admin/masterlist");
+  return {
+    success: failed.length === 0,
+    message: `Removed ${ok} student(s)${failed.length ? `, ${failed.length} failed` : ""}.`,
+    ok,
+    failed,
+  };
+}
+
+export async function bulkMoveStudentsToSection(ids: string[], sectionId: string): Promise<BulkResult> {
+  await requireAdminSession();
+
+  const section = await prisma.section.findUnique({ where: { id: sectionId } });
+  if (!section) {
+    return { success: false, message: "Target section not found.", ok: 0, failed: [] };
+  }
+
+  let ok = 0;
+  const failed: BulkResult["failed"] = [];
+
+  for (const id of ids) {
+    try {
+      await prisma.student.update({ where: { id }, data: { sectionId } });
+      ok++;
+    } catch (err: any) {
+      failed.push({ id, name: id, message: err?.message || "Move failed." });
+    }
+  }
+
+  await logActivity("STUDENT_BULK_MOVE", `Moved ${ok} student(s) to section ${section.name}`, { sectionId, ok, failed: failed.length });
+  revalidatePath("/admin/masterlist");
+  return {
+    success: failed.length === 0,
+    message: `Moved ${ok} student(s) to ${section.name}${failed.length ? `, ${failed.length} failed` : ""}.`,
+    ok,
+    failed,
+  };
+}
+
+export async function bulkSetStudentsSubject(ids: string[], subjectId: string, enroll: boolean): Promise<BulkResult> {
+  await requireAdminSession();
+
+  const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+  if (!subject) {
+    return { success: false, message: "Subject not found.", ok: 0, failed: [] };
+  }
+
+  let ok = 0;
+  const failed: BulkResult["failed"] = [];
+
+  for (const id of ids) {
+    try {
+      if (enroll) {
+        await prisma.studentSubject.upsert({
+          where: { studentId_subjectId: { studentId: id, subjectId } },
+          update: {},
+          create: { studentId: id, subjectId },
+        });
+      } else {
+        await prisma.studentSubject.deleteMany({ where: { studentId: id, subjectId } });
+      }
+      ok++;
+    } catch (err: any) {
+      failed.push({ id, name: id, message: err?.message || "Enrollment update failed." });
+    }
+  }
+
+  const verb = enroll ? "Enrolled" : "Unenrolled";
+  await logActivity("STUDENT_BULK_SUBJECT", `${verb} ${ok} student(s) ${enroll ? "in" : "from"} ${subject.code}`, { subjectId, enroll, ok, failed: failed.length });
+  revalidatePath("/admin/masterlist");
+  return {
+    success: failed.length === 0,
+    message: `${verb} ${ok} student(s) ${enroll ? "in" : "from"} ${subject.code}${failed.length ? `, ${failed.length} failed` : ""}.`,
+    ok,
+    failed,
+  };
+}
+
+export async function bulkResetStudentPasswords(ids: string[]): Promise<BulkResult> {
+  await requireAdminSession();
+
+  const bcrypt = require("bcryptjs");
+  let ok = 0;
+  const failed: BulkResult["failed"] = [];
+
+  for (const id of ids) {
+    const student = await prisma.student.findUnique({ where: { id }, include: { user: true } });
+    if (!student) {
+      failed.push({ id, name: id, message: "Student not found." });
+      continue;
+    }
+    try {
+      // Reset to the student's default password (their Student ID).
+      const hashed = bcrypt.hashSync(student.studentId, 10);
+      await prisma.user.update({ where: { id: student.userId }, data: { password: hashed } });
+      ok++;
+    } catch (err: any) {
+      failed.push({ id, name: student.user.name || student.studentId, message: err?.message || "Reset failed." });
+    }
+  }
+
+  await logActivity("STUDENT_BULK_PASSWORD_RESET", `Reset ${ok} student password(s) to default`, { ok, failed: failed.length });
+  revalidatePath("/admin/masterlist");
+  return {
+    success: failed.length === 0,
+    message: `Reset ${ok} password(s) to the Student ID default${failed.length ? `, ${failed.length} failed` : ""}.`,
+    ok,
+    failed,
+  };
 }
 
 export async function updateStudentEnrollments(studentDbId: string, subjectIds: string[]) {

@@ -19,6 +19,8 @@ import { format, isToday, isYesterday } from "date-fns";
 import { formatDate, formatTime } from "@/src/lib/date";
 import AttendanceCalendar from "@/src/components/AttendanceCalendar";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
+import ChangeUsernameForm from "@/src/components/ChangeUsernameForm";
+import ChangeEmailForm from "@/src/components/ChangeEmailForm";
 
 export default async function StudentDashboard() {
   const session = await getServerSession(authOptions);
@@ -322,7 +324,11 @@ export default async function StudentDashboard() {
             </Card>
           </div>
         </div>
-        <ChangePasswordForm />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChangeUsernameForm currentUsername={student.user.username ?? ""} />
+          <ChangeEmailForm currentEmail={student.user.email ?? ""} />
+          <ChangePasswordForm />
+        </div>
       </div>
     </div>
   );

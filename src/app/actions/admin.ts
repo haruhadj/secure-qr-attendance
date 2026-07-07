@@ -7,6 +7,7 @@ import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/src/lib/audit";
 import { getUTCMidnight } from "@/src/lib/date";
+import { normalizeEmail } from "@/src/lib/username";
 
 // Authorization helper
 async function requireAdmin() {
@@ -106,11 +107,16 @@ export async function getStaff() {
   });
 }
 
-export async function addStaff(name: string, email: string, role: UserRole) {
+export async function addStaff(name: string, rawEmail: string, role: UserRole) {
   await requireAdmin();
 
   if (role !== UserRole.ADMIN && role !== UserRole.TEACHER) {
     return { success: false, message: "Invalid role specified." };
+  }
+
+  const email = normalizeEmail(rawEmail);
+  if (!email) {
+    return { success: false, message: "A valid email is required." };
   }
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });

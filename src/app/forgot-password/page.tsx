@@ -1,9 +1,42 @@
-import { Button } from "@/src/components/ui/button";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { ShieldCheck, ArrowLeft, UserCog } from "lucide-react";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { requestPasswordReset } from "@/src/app/actions/password";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { ShieldCheck, ArrowLeft, Mail, MailCheck, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) {
+      toast.error("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await requestPasswordReset(normalized);
+      if (result.success) {
+        setSent(true);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
@@ -19,33 +52,73 @@ export default function ForgotPasswordPage() {
         </div>
 
         <Card className="border-none shadow-xl shadow-border/5">
-          <CardHeader>
-            <div className="flex justify-center mb-2">
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <UserCog className="w-8 h-8 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-center">Forgot your password?</CardTitle>
-            <CardDescription className="text-center space-y-3">
-              <span className="block">
-                Password resets are handled by your school administrator.
-              </span>
-              <span className="block text-xs bg-muted rounded-lg px-4 py-3 text-left leading-relaxed">
-                <strong className="text-foreground block mb-1">What to do:</strong>
-                Contact your admin or teacher and ask them to reset your password.
-                Your default password is your <strong className="text-foreground">Student ID</strong> (e.g. <code className="font-mono">2024-0001</code>).
-                If you've changed it and forgotten it, only an admin can reset it for you.
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Link href="/" className="w-full">
-              <Button variant="outline" className="w-full gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Sign In
-              </Button>
-            </Link>
-          </CardFooter>
+          {sent ? (
+            <>
+              <CardHeader>
+                <div className="flex justify-center mb-2">
+                  <div className="p-3 bg-primary/10 rounded-2xl">
+                    <MailCheck className="w-8 h-8 text-primary" />
+                  </div>
+                </div>
+                <CardTitle className="text-center">Check your email</CardTitle>
+                <CardDescription className="text-center">
+                  If an account exists for <strong className="text-foreground">{email.trim().toLowerCase()}</strong>,
+                  we&apos;ve sent a link to reset your password. The link expires in 30 minutes.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/" className="w-full">
+                  <Button variant="outline" className="w-full gap-2">
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Sign In
+                  </Button>
+                </Link>
+              </CardFooter>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <CardHeader>
+                <div className="flex justify-center mb-2">
+                  <div className="p-3 bg-primary/10 rounded-2xl">
+                    <Mail className="w-8 h-8 text-primary" />
+                  </div>
+                </div>
+                <CardTitle className="text-center">Forgot your password?</CardTitle>
+                <CardDescription className="text-center">
+                  Enter the email on your account and we&apos;ll send you a link to reset your password.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@school.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    required
+                    className="bg-muted/50"
+                  />
+                </div>
+                <Button type="submit" className="w-full gap-2" disabled={loading}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                  {loading ? "Sending..." : "Send reset link"}
+                </Button>
+              </CardContent>
+              <CardFooter>
+                <Link href="/" className="w-full">
+                  <Button variant="outline" className="w-full gap-2">
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Sign In
+                  </Button>
+                </Link>
+              </CardFooter>
+            </form>
+          )}
         </Card>
       </div>
     </main>

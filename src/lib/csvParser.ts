@@ -118,14 +118,14 @@ export function parseMasterlistCSV(csvText: string): ParsedMasterlist {
 
     const sectionName       = get("section_name");
     const adviserName       = get("adviser_name");
-    const adviserEmail      = get("adviser_email");
+    const adviserEmail      = get("adviser_email").toLowerCase();
     const subjectCode       = get("subject_code");
     const subjectName       = get("subject_name");
     const subjectTeacher    = get("subject_teacher_name");
-    const subjectTeacherEmail = get("subject_teacher_email");
+    const subjectTeacherEmail = get("subject_teacher_email").toLowerCase();
     const studentId         = get("student_id");
     const studentName       = get("student_name");
-    const studentEmail      = get("student_email") || undefined;
+    const studentEmail      = get("student_email").toLowerCase() || undefined;
     const yearLevel         = get("year_level") || undefined;
     const subjectUnitsStr   = get("subject_units");
     const rawScheduleDay    = get("schedule_day");

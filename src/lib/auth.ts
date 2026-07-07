@@ -62,9 +62,10 @@ export const authOptions: NextAuthOptions = {
 
         // Students imported without an email log in with a name-derived username
         // (usernames are stored lowercase), so accept either identifier here.
+        // Emails and usernames are both stored lowercase, so match case-insensitively.
         const user = await prisma.user.findFirst({
           where: {
-            OR: [{ email: identifier }, { username: identifier.toLowerCase() }],
+            OR: [{ email: identifier.toLowerCase() }, { username: identifier.toLowerCase() }],
           },
         });
 

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 import crypto from "crypto";
 import { sendPasswordResetEmail } from "@/src/lib/email";
+import { normalizeUsername, normalizeEmail } from "@/src/lib/username";
 
 const RESET_TOKEN_EXPIRY_MINUTES = 30;
 
@@ -30,10 +31,63 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
   return { success: true, message: "Password changed successfully." };
 }
 
-export async function requestPasswordReset(email: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+export async function changeOwnUsername(newUsername: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { success: false, message: "Not authenticated." };
 
-  if (!user) {
+  const userId = (session.user as any).id;
+
+  const username = normalizeUsername(newUsername);
+  if (!username) {
+    return { success: false, message: "Username must contain letters or numbers." };
+  }
+
+  const existing = await prisma.user.findFirst({
+    where: { username, NOT: { id: userId } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { success: false, message: "That username is already taken." };
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: { username } });
+
+  return { success: true, message: `Username updated to "${username}".`, username };
+}
+
+export async function changeOwnEmail(newEmail: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { success: false, message: "Not authenticated." };
+
+  const userId = (session.user as any).id;
+
+  const email = normalizeEmail(newEmail);
+  if (!email) {
+    return { success: false, message: "Please enter an email address." };
+  }
+  // Basic shape check — a real address for password-reset delivery.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { success: false, message: "Please enter a valid email address." };
+  }
+
+  const existing = await prisma.user.findFirst({
+    where: { email, NOT: { id: userId } },
+    select: { id: true },
+  });
+  if (existing) {
+    return { success: false, message: "That email is already in use by another account." };
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: { email } });
+
+  return { success: true, message: `Email saved as "${email}".`, email };
+}
+
+export async function requestPasswordReset(rawEmail: string) {
+  const email = normalizeEmail(rawEmail);
+  const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
+
+  if (!user || !email) {
     return { success: true, message: "If that email exists, a reset link has been sent." };
   }
 

@@ -31,6 +31,16 @@ export function normalizeUsername(value: string | null | undefined): string | nu
 }
 
 /**
+ * Normalize an email for storage/lookup: trim + lowercase so the same address
+ * in different casing maps to one row. Returns null when nothing usable remains
+ * (empty input) so the DB's unique constraint isn't tripped by "".
+ */
+export function normalizeEmail(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.trim().toLowerCase() || null;
+}
+
+/**
  * A Prisma client or transaction client — anything exposing `user.findFirst`.
  * Typed loosely so both `prisma` and a `$transaction` client are accepted
  * without fighting Prisma's generated generic signatures.

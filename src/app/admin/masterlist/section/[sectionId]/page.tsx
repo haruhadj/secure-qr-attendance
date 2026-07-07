@@ -5,16 +5,8 @@ import { UserRole } from "@prisma/client";
 import { getSectionMasterlist } from "@/src/app/actions/masterlist";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/src/components/ui/table";
-import {
-  AddStudentForm,
-  RemoveStudentButton,
-  EditStudentModal,
-  ViewQrModal,
-  ManageStudentSubjectsModal,
-} from "@/src/components/MasterlistForms";
+import { AddStudentForm } from "@/src/components/MasterlistForms";
+import StudentMasterlistTable from "@/src/components/StudentMasterlistTable";
 import { Users, GraduationCap, ChevronLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import DatePicker from "@/src/components/DatePicker";
@@ -100,68 +92,11 @@ export default async function SectionMasterlist({
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[110px]">Student ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell w-[110px]">Year Level</TableHead>
-                  <TableHead className="w-[130px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {student.studentId}
-                    </TableCell>
-                    <TableCell className="font-medium text-foreground">
-                      <div>{student.user.name}</div>
-                      {student.user.username && (
-                        <div className="text-xs text-muted-foreground font-mono">@{student.user.username}</div>
-                      )}
-                      <div className="md:hidden text-xs text-muted-foreground truncate max-w-[140px]">{student.user.email}</div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                      {student.user.email}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                      {student.yearLevel || <span className="text-muted-foreground/30">—</span>}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <ManageStudentSubjectsModal
-                          studentDbId={student.id}
-                          studentName={student.user.name || "Unknown"}
-                          allSubjects={subjects.map((s) => ({ id: s.id, code: s.code, name: s.name }))}
-                          enrolledSubjectIds={student.enrolledSubjects.map((e) => e.subjectId)}
-                        />
-                        <ViewQrModal
-                          studentName={student.user.name || "Unknown"}
-                          qrToken={student.qrToken}
-                        />
-                        <EditStudentModal
-                          student={student}
-                          sections={sections.map((s) => ({ id: s.id, name: s.name }))}
-                        />
-                        <RemoveStudentButton
-                          studentDbId={student.id}
-                          studentName={student.user.name || "Unknown"}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {students.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground italic">
-                      No students in this section yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <StudentMasterlistTable
+              students={students}
+              sections={sections.map((s) => ({ id: s.id, name: s.name }))}
+              subjects={subjects.map((s) => ({ id: s.id, code: s.code, name: s.name }))}
+            />
           </CardContent>
         </Card>
       </div>
