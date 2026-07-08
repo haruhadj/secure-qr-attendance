@@ -258,7 +258,7 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                 {filteredSubjects.map((subject) => (
                   <tr
                     key={subject.id}
-                    onClick={() => router.push(`/admin/masterlist/subject/${subject.id}`)}
+                    onClick={() => router.push(`/admin/masterlist/subject/${subject.id}${subjectSearch ? `?bq=${encodeURIComponent(subjectSearch)}` : ""}`)}
                     className="border-b border-border/50 hover:bg-muted/40 cursor-pointer group transition-colors"
                   >
                     <td className="px-4 py-3 font-mono font-bold text-primary text-xs">

@@ -31,11 +31,14 @@ export default async function SubjectMasterlist({
   searchParams,
 }: {
   params: Promise<{ subjectId: string }>;
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; bq?: string }>;
 }) {
   const resolvedParams = await params;
   const subjectId = resolvedParams.subjectId;
-  const { date: dateStr } = await searchParams;
+  const { date: dateStr, bq } = await searchParams;
+
+  // Return to the Subjects tab, restoring the search filter the user came from.
+  const backHref = `/admin/masterlist?tab=subjects${bq ? `&bq=${encodeURIComponent(bq)}` : ""}`;
 
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) {
@@ -61,7 +64,7 @@ export default async function SubjectMasterlist({
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Link href="/admin/masterlist?tab=subjects" className="hover:text-foreground transition-colors flex items-center gap-1">
+              <Link href={backHref} className="hover:text-foreground transition-colors flex items-center gap-1">
                 <ChevronLeft className="w-4 h-4" />
                 Back to Masterlist
               </Link>
