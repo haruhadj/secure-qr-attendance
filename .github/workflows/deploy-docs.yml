@@ -44,7 +44,7 @@ jobs:
         run: pnpm docs:build
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           # Enable Pages and set the build type to "GitHub Actions" from the
           # workflow itself, so deployment doesn't depend on the repo UI toggle.
