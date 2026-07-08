@@ -61,7 +61,7 @@ export default async function SubjectMasterlist({
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Link href="/admin/masterlist" className="hover:text-foreground transition-colors flex items-center gap-1">
+              <Link href="/admin/masterlist?tab=subjects" className="hover:text-foreground transition-colors flex items-center gap-1">
                 <ChevronLeft className="w-4 h-4" />
                 Back to Masterlist
               </Link>
