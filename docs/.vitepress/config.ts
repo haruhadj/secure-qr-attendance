@@ -78,6 +78,8 @@ export default withMermaid({
           { text: "Admin Guide", link: "/user-guides/admin" },
           { text: "Teacher Guide", link: "/user-guides/teacher" },
           { text: "Student Guide", link: "/user-guides/student" },
+          { text: "Operator Runbook", link: "/user-guides/operator-runbook" },
+          { text: "Troubleshooting", link: "/user-guides/troubleshooting" },
         ],
       },
       {
