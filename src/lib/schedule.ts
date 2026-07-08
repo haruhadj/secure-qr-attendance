@@ -128,6 +128,30 @@ export function startMinutesForDay(scheduleTime: string | null | undefined, dow:
   return parseStartMinutes(scheduleTime);
 }
 
+/** Zero-pad an "H:MM"/"HH:MM" fragment to "HH:MM" for a native time input, or "" if unparseable. */
+function padHHMM(fragment: string): string {
+  const m = (fragment ?? "").trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return "";
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (h > 23 || min > 59) return "";
+  return `${String(h).padStart(2, "0")}:${m[2]}`;
+}
+
+/** Split a stored time ("08:00-09:30" or "08:00") into padded { start, end } for two time inputs. */
+export function splitTimeRange(value?: string | null): { start: string; end: string } {
+  const [a, b] = (value ?? "").trim().split("-");
+  return { start: padHHMM(a ?? ""), end: padHHMM(b ?? "") };
+}
+
+/** Join a start/end pair back into the stored "HH:MM-HH:MM" form (or "HH:MM", or ""). */
+export function joinTimeRange(start: string, end: string): string {
+  const s = padHHMM(start);
+  const e = padHHMM(end);
+  if (!s) return "";
+  return e ? `${s}-${e}` : s;
+}
+
 /** Human-friendly one-line schedule, e.g. "Mon 08:00-09:30 · Wed 13:00-14:30" or "Mon,Wed,Fri · 08:00-09:30". */
 export function formatSchedule(scheduleDay?: string | null, scheduleTime?: string | null): string {
   const perDay = parsePerDayTimes(scheduleTime);

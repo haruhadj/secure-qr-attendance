@@ -9,6 +9,8 @@ import {
   formatSchedule,
   decodeSchedule,
   encodeSchedule,
+  splitTimeRange,
+  joinTimeRange,
 } from "../schedule";
 
 // Manila is UTC+8 with no DST, so a UTC instant maps to Manila by +8h.
@@ -144,5 +146,15 @@ describe("per-day schedule encoding", () => {
   it("encodeSchedule drops times with no days and blanks", () => {
     expect(encodeSchedule([], {})).toEqual({ scheduleDay: null, scheduleTime: null });
     expect(encodeSchedule(["Mon"], {})).toEqual({ scheduleDay: "Mon", scheduleTime: null });
+  });
+
+  it("splitTimeRange / joinTimeRange bridge the stored form and native time inputs", () => {
+    expect(splitTimeRange("08:00-09:30")).toEqual({ start: "08:00", end: "09:30" });
+    expect(splitTimeRange("8:05")).toEqual({ start: "08:05", end: "" }); // pads for <input type=time>
+    expect(splitTimeRange(null)).toEqual({ start: "", end: "" });
+
+    expect(joinTimeRange("08:00", "09:30")).toBe("08:00-09:30");
+    expect(joinTimeRange("08:00", "")).toBe("08:00"); // start only
+    expect(joinTimeRange("", "09:30")).toBe(""); // end without start is dropped
   });
 });

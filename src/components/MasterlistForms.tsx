@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { toast } from "sonner";
 import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen, BookMarked } from "lucide-react";
 import { formatDate } from "@/src/lib/date";
-import { encodeSchedule, decodeSchedule } from "@/src/lib/schedule";
+import { encodeSchedule, decodeSchedule, splitTimeRange, joinTimeRange } from "@/src/lib/schedule";
 import { deriveUsername } from "@/src/lib/username";
 import { QRCodeSVG } from "qrcode.react";
 import { QrDownloadButton } from "@/src/components/QrDownloadButton";
@@ -1009,7 +1009,8 @@ function ScheduleEditor({
       onChange([...days, day], seed ? { ...times, [day]: seed } : times);
     }
   };
-  const setTime = (day: string, val: string) => onChange(days, { ...times, [day]: val });
+  const setRange = (day: string, start: string, end: string) =>
+    onChange(days, { ...times, [day]: joinTimeRange(start, end) });
   const ordered = SCHEDULE_DAYS.filter((d) => days.includes(d));
 
   return (
@@ -1025,19 +1026,31 @@ function ScheduleEditor({
       </div>
       {ordered.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          {ordered.map((day) => (
-            <div key={day} className="flex items-center gap-2">
-              <span className="w-10 shrink-0 text-sm font-medium text-muted-foreground">{day}</span>
-              <Input
-                value={times[day] ?? ""}
-                onChange={(e) => setTime(day, e.target.value)}
-                placeholder="08:00-09:30"
-                className="h-9"
-              />
-            </div>
-          ))}
+          {ordered.map((day) => {
+            const { start, end } = splitTimeRange(times[day]);
+            return (
+              <div key={day} className="flex items-center gap-2">
+                <span className="w-10 shrink-0 text-sm font-medium text-muted-foreground">{day}</span>
+                <Input
+                  type="time"
+                  value={start}
+                  onChange={(e) => setRange(day, e.target.value, end)}
+                  className="h-9"
+                  aria-label={`${day} start time`}
+                />
+                <span className="text-muted-foreground text-sm">–</span>
+                <Input
+                  type="time"
+                  value={end}
+                  onChange={(e) => setRange(day, start, e.target.value)}
+                  className="h-9"
+                  aria-label={`${day} end time`}
+                />
+              </div>
+            );
+          })}
           <p className="text-[11px] text-muted-foreground">
-            Each day keeps its own time. Leave a day blank if it has no fixed start time.
+            Set each day&apos;s start–end time independently. Leave a day blank if it has no fixed time.
           </p>
         </div>
       )}
