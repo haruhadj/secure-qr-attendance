@@ -7,5 +7,8 @@ coverage/
 .env*
 !.env.example
 .next/
+next-env.d.ts
+tsconfig.tsbuildinfo
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+.vercel

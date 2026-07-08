@@ -126,9 +126,31 @@ export default async function TeacherAppeals() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm text-muted-foreground">
                         {appeal.description}
                       </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {appeal.subject && (
+                          <Badge variant="outline" className="text-[10px] font-mono border-border">
+                            {appeal.subject.code}
+                          </Badge>
+                        )}
+                        {appeal.date && (
+                          <Badge variant="outline" className="text-[10px] border-border">
+                            Absence: {formatDate(appeal.date)}
+                          </Badge>
+                        )}
+                        {appeal.imageUrl && (
+                          <a
+                            href={appeal.imageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-medium text-primary underline underline-offset-2"
+                          >
+                            View proof
+                          </a>
+                        )}
+                      </div>
                       <p className="text-[10px] font-mono text-muted-foreground/50">
                         Submitted: {formatDateTime(appeal.createdAt)}
                       </p>

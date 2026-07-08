@@ -32,7 +32,12 @@ export type ActivityType =
   | "SETTING_UPDATE"
   | "APPEAL_REVIEW"
   | "MASTERLIST_IMPORT"
-  | "DATA_RESET";
+  | "DATA_RESET"
+  | "DATA_RESTORE"
+  | "SETUP_ADMIN"
+  | "TERM_CREATE"
+  | "TERM_ACTIVATE"
+  | "BACKUP_CRON";
 
 /**
  * Logs a system activity to the ActivityLog table.

@@ -17,6 +17,7 @@ import { IdCard, History, CheckCircle2, XCircle, Clock, ArrowRight, Calendar, Us
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import { format, isToday, isYesterday } from "date-fns";
 import { formatDate, formatTime } from "@/src/lib/date";
+import { getActiveTermId } from "@/src/lib/term";
 import AttendanceCalendar from "@/src/components/AttendanceCalendar";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 import ChangeUsernameForm from "@/src/components/ChangeUsernameForm";
@@ -30,6 +31,7 @@ export default async function StudentDashboard() {
     redirect("/");
   }
 
+  const activeTermId = await getActiveTermId();
   const student = await prisma.student.findUnique({
     where: { userId: (session.user as any).id },
     include: {
@@ -40,6 +42,7 @@ export default async function StudentDashboard() {
         },
       },
       enrolledSubjects: {
+        where: { termId: activeTermId },
         include: {
           subject: {
             include: { teacher: { include: { user: true } } },
@@ -48,6 +51,7 @@ export default async function StudentDashboard() {
         orderBy: { subject: { code: 'asc' } },
       },
       attendances: {
+        where: { termId: activeTermId },
         orderBy: { date: 'desc' },
         include: { subject: true },
       },

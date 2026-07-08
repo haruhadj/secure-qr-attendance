@@ -8,6 +8,8 @@ import { revalidatePath } from "next/cache";
 import { logActivity } from "@/src/lib/audit";
 
 import { getUTCMidnight } from "@/src/lib/date";
+import { decideScanStatus } from "@/src/lib/schedule";
+import { getActiveTermId } from "@/src/lib/term";
 
 export async function updateAttendance(
   studentId: string,
@@ -42,6 +44,8 @@ export async function updateAttendance(
     return { error: `Edits are locked for attendance older than ${timeStr}.` };
   }
 
+  const activeTermId = await getActiveTermId();
+
   const result = await prisma.$transaction(async (tx) => {
     const attendance = await tx.attendance.upsert({
       where: {
@@ -54,12 +58,14 @@ export async function updateAttendance(
       update: {
         status: newStatus,
         updatedAt: new Date(),
+        termId: activeTermId,
       },
       create: {
         studentId,
         date: targetDate,
         subjectId,
         status: newStatus,
+        termId: activeTermId,
       },
     });
 
@@ -86,6 +92,7 @@ export async function updateAttendance(
 
   revalidatePath("/teacher/roster");
   revalidatePath("/admin/audit");
+  revalidatePath("/admin/attendance");
   revalidatePath("/student/dashboard");
   return { success: true, data: result };
 }
@@ -123,9 +130,10 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
     return { success: false, message: `You are not the teacher for ${subject.name}.`, subjectCode: subject.code };
   }
 
-  // 3. Verify student is enrolled in this subject
-  const enrollment = await prisma.studentSubject.findUnique({
-    where: { studentId_subjectId: { studentId: student.id, subjectId } },
+  // 3. Verify student is enrolled in this subject FOR THE ACTIVE TERM
+  const activeTermId = await getActiveTermId();
+  const enrollment = await prisma.studentSubject.findFirst({
+    where: { studentId: student.id, subjectId, termId: activeTermId },
   });
 
   if (!enrollment) {
@@ -136,7 +144,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
     };
   }
 
-  // 4. Check if already marked today
+  // 4. Check if already marked attended today
   const today = getUTCMidnight();
 
   const existing = await prisma.attendance.findUnique({
@@ -149,17 +157,25 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
     },
   });
 
-  if (existing && existing.status === "PRESENT") {
+  // Already checked in (PRESENT or LATE) → nothing to do.
+  if (existing && (existing.status === "PRESENT" || existing.status === "LATE")) {
     return {
       success: false,
-      message: `${student.user.name} is already marked PRESENT today.`,
+      message: `${student.user.name} is already marked ${existing.status} today.`,
       alreadyPresent: true,
       subjectCode: subject.code,
     };
   }
 
-  // 5. Mark as PRESENT via transaction + audit log
+  // 5. Decide PRESENT vs LATE from the subject's schedule + grace window.
+  const graceSetting = await prisma.systemSetting.findUnique({
+    where: { key: "late_grace_minutes" },
+  });
+  const graceMinutes = graceSetting ? parseInt(graceSetting.value, 10) : 15;
+  const decision = decideScanStatus(subject, graceMinutes);
+
   const oldStatus = existing?.status || null;
+  const newStatus = decision.status;
 
   await prisma.$transaction(async (tx) => {
     const attendance = await tx.attendance.upsert({
@@ -170,12 +186,13 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
           subjectId,
         },
       },
-      update: { status: "PRESENT", updatedAt: new Date() },
+      update: { status: newStatus, updatedAt: new Date(), termId: activeTermId },
       create: {
         studentId: student.id,
         date: today,
         subjectId,
-        status: "PRESENT",
+        status: newStatus,
+        termId: activeTermId,
       },
     });
 
@@ -184,18 +201,21 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
         attendanceId: attendance.id,
         changedBy: (session.user as any).id,
         oldStatus,
-        newStatus: "PRESENT",
-        reason: "QR Scan",
+        newStatus,
+        // Make an override of a manual ABSENT explicit in the trail, not silent.
+        reason: oldStatus === "ABSENT" ? "QR Scan (overrode manual ABSENT)" : "QR Scan",
         timestamp: new Date(),
       },
     });
   });
 
-  await logActivity("ATTENDANCE_SCAN", `QR Scan: ${student.user.name} marked PRESENT`, {
+  await logActivity("ATTENDANCE_SCAN", `QR Scan: ${student.user.name} marked ${newStatus}`, {
     studentId: student.id,
     studentName: student.user.name,
     subjectId,
     subjectName: subject.name,
+    status: newStatus,
+    overrodeAbsent: oldStatus === "ABSENT",
   });
 
   revalidatePath("/teacher/roster");
@@ -203,12 +223,18 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
   revalidatePath("/admin/audit");
   revalidatePath("/student/dashboard");
 
+  // Surface a clear message — including when a scan changed a prior ABSENT and
+  // when the student is checking in late.
+  const lateNote = newStatus === "LATE" ? " (LATE)" : "";
+  const overrideNote = oldStatus === "ABSENT" ? " — updated from ABSENT" : "";
+
   return {
     success: true,
-    message: `✓ ${student.user.name} (${student.studentId}) marked PRESENT`,
+    message: `✓ ${student.user.name} (${student.studentId}) marked ${newStatus}${lateNote}${overrideNote}`,
     studentName: student.user.name,
     studentId: student.studentId,
     subjectCode: subject.code,
     subjectName: subject.name,
+    status: newStatus,
   };
 }

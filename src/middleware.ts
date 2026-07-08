@@ -5,6 +5,23 @@ export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const role = req.nextauth.token?.role as string | undefined;
+    const mustChangePassword = (req.nextauth.token as any)?.mustChangePassword === true;
+
+    // Force users still on a default/temporary password to change it before
+    // reaching anything else. /change-password itself and the sign-out flow are
+    // exempt so there's no redirect loop.
+    if (
+      mustChangePassword &&
+      pathname !== "/change-password" &&
+      !pathname.startsWith("/api/auth")
+    ) {
+      return NextResponse.redirect(new URL("/change-password", req.nextUrl.origin));
+    }
+    // Once cleared, keep them out of the forced-change page.
+    if (!mustChangePassword && pathname === "/change-password" && role) {
+      const home = role === "ADMIN" ? "/admin/dashboard" : role === "TEACHER" ? "/teacher/roster" : "/student/dashboard";
+      return NextResponse.redirect(new URL(home, req.nextUrl.origin));
+    }
 
     // Already authenticated users hitting the login page → redirect to their dashboard
     // Use req.nextUrl.origin to build clean URLs without any callbackUrl param
@@ -40,9 +57,12 @@ export default withAuth(
         // Public routes — always allowed
         if (
           pathname === "/" ||
+          pathname.startsWith("/setup") ||
           pathname.startsWith("/forgot-password") ||
           pathname.startsWith("/reset-password") ||
-          pathname.startsWith("/api/auth")
+          pathname.startsWith("/api/auth") ||
+          pathname.startsWith("/api/health") ||
+          pathname.startsWith("/api/cron")
         ) {
           return true;
         }

@@ -7,15 +7,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
-import { getAdminDashboardStats, getSystemSettings } from "@/src/app/actions/admin";
+import { getAdminDashboardStats, getSystemSettings, getTerms } from "@/src/app/actions/admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import SystemSettingsForm from "@/src/components/SystemSettingsForm";
 import { Activity, Users, Settings, GraduationCap, FolderOpen, AlertTriangle, UserPlus, UserMinus, BookOpen, Edit, CheckCircle, XCircle, Search, QrCode, Upload, Trash2, RefreshCw, Key, BookMarked, ScanLine } from "lucide-react";
-import DemoAccountsCard from "./DemoAccountsCard";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 import DataManagementCard from "@/src/components/DataManagementCard";
+import SchoolYearCard from "@/src/components/SchoolYearCard";
+import HealthIndicator from "@/src/components/HealthIndicator";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
@@ -27,16 +28,30 @@ export default async function AdminDashboard() {
 
   const stats = await getAdminDashboardStats();
   const settings = await getSystemSettings();
+  const terms = await getTerms();
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <AutoRefresh interval={30000} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
-            <Activity className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
-            Admin Dashboard
-          </h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2 md:gap-3">
+              <Activity className="w-6 h-6 md:w-8 md:h-8 text-primary shrink-0" />
+              Admin Dashboard
+            </h1>
+            <div className="flex items-center gap-3">
+              <HealthIndicator />
+              <a
+                href="https://haruhadj.github.io/secure-qr-attendance/user-guides/troubleshooting"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Help
+              </a>
+            </div>
+          </div>
           <p className="text-muted-foreground">
             System overview and global configurations
           </p>
@@ -196,7 +211,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <DemoAccountsCard />
+        <SchoolYearCard terms={terms} />
         <ChangePasswordForm />
         <DataManagementCard />
       </div>

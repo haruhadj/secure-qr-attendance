@@ -13,6 +13,7 @@ import AppealForm from "@/src/components/AppealForm";
 import { Badge } from "@/src/components/ui/badge";
 import { FileText, Clock, CheckCircle, XCircle } from "lucide-react";
 import { formatDateTime } from "@/src/lib/date";
+import { getActiveTermId } from "@/src/lib/term";
 
 export default async function StudentAppeals() {
   const session = await getServerSession(authOptions);
@@ -21,16 +22,25 @@ export default async function StudentAppeals() {
     redirect("/");
   }
 
+  const activeTermId = await getActiveTermId();
   const student = await prisma.student.findUnique({
     where: { userId: (session.user as any).id },
     include: {
       appeals: {
         orderBy: { createdAt: 'desc' }
-      }
+      },
+      enrolledSubjects: {
+        where: { termId: activeTermId },
+        include: { subject: { select: { id: true, code: true, name: true } } },
+      },
     }
   });
 
   if (!student) redirect("/");
+
+  const subjects = student.enrolledSubjects
+    .map((e) => e.subject)
+    .sort((a, b) => a.code.localeCompare(b.code));
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -58,7 +68,7 @@ export default async function StudentAppeals() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AppealForm studentId={student.id} />
+              <AppealForm subjects={subjects} />
             </CardContent>
           </Card>
 

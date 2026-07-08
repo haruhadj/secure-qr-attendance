@@ -18,7 +18,8 @@ import {
   ScanLine,
   Users,
   Activity,
-  Briefcase
+  Briefcase,
+  CalendarDays
 } from "lucide-react";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
@@ -42,6 +43,7 @@ export default function Navbar({ role }: { role: string }) {
 
   const adminLinks = [
     { href: "/admin/dashboard", label: "Dashboard", icon: Activity },
+    { href: "/admin/attendance", label: "Attendance", icon: CalendarDays },
     { href: "/admin/staff", label: "Staff", icon: Briefcase },
     { href: "/admin/masterlist", label: "Masterlist", icon: Users },
     { href: "/admin/audit", label: "Audit", icon: History },

@@ -27,6 +27,7 @@ interface ScanResult {
   subjectCode?: string;
   subjectName?: string;
   alreadyPresent?: boolean;
+  status?: "PRESENT" | "ABSENT" | "LATE";
   timestamp: Date;
 }
 
@@ -314,9 +315,15 @@ export default function QrScanner({ subjects }: { subjects: Subject[] }) {
                       </Badge>
                     )}
                     {scan.success && (
-                      <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                        Present
-                      </Badge>
+                      scan.status === "LATE" ? (
+                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+                          Late
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                          Present
+                        </Badge>
+                      )
                     )}
                   </div>
                 </div>

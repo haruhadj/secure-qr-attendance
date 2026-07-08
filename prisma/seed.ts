@@ -5,6 +5,14 @@ import crypto from 'crypto';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Safety guard: the seed creates well-known demo credentials. Never let it run
+  // against a production database. Set ALLOW_PROD_SEED=1 only for a deliberate
+  // first-run bootstrap you immediately change.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== '1') {
+    console.error('Refusing to seed in production. Use the /setup first-run flow instead.');
+    process.exit(1);
+  }
+
   console.log('Seeding data...');
 
   const hashedAdminPassword = bcrypt.hashSync('password123', 10);
@@ -19,6 +27,7 @@ async function main() {
       password: hashedAdminPassword,
       name: 'System Administrator',
       role: UserRole.ADMIN,
+      mustChangePassword: true,
     },
   });
 
@@ -31,6 +40,7 @@ async function main() {
       password: hashedTeacherPassword,
       name: 'Prof. Michael Fernandez',
       role: UserRole.TEACHER,
+      mustChangePassword: true,
     },
   });
 
@@ -39,6 +49,16 @@ async function main() {
     update: {},
     create: { userId: teacherUser.id },
   });
+
+  // Create an active school-year term (enrollments/attendance are scoped to it)
+  const year = new Date().getFullYear();
+  const term = await prisma.term.upsert({
+    where: { name: `AY ${year}-${year + 1}` },
+    update: { isActive: true },
+    create: { name: `AY ${year}-${year + 1}`, isActive: true },
+  });
+  // Ensure exactly one active term.
+  await prisma.term.updateMany({ where: { NOT: { id: term.id } }, data: { isActive: false } });
 
   // Create Section (for grouping / class adviser)
   const section = await prisma.section.upsert({
@@ -94,6 +114,7 @@ async function main() {
         password: hashedStudentPassword,
         name: stu.name,
         role: UserRole.STUDENT,
+        mustChangePassword: true,
       },
     });
 
@@ -108,12 +129,12 @@ async function main() {
       },
     });
 
-    // Enroll student in all subjects
+    // Enroll student in all subjects for the active term
     for (const subject of subjects) {
       await prisma.studentSubject.upsert({
-        where: { studentId_subjectId: { studentId: student.id, subjectId: subject.id } },
+        where: { studentId_subjectId_termId: { studentId: student.id, subjectId: subject.id, termId: term.id } },
         update: {},
-        create: { studentId: student.id, subjectId: subject.id },
+        create: { studentId: student.id, subjectId: subject.id, termId: term.id },
       });
     }
   }

@@ -10,6 +10,7 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "@/src/lib/prisma";
 import QrScanner from "@/src/components/QrScanner";
 import { ScanLine, Users } from "lucide-react";
+import { getActiveTermId } from "@/src/lib/term";
 
 export default async function TeacherScanner() {
   const session = await getServerSession(authOptions);
@@ -18,12 +19,14 @@ export default async function TeacherScanner() {
     redirect("/");
   }
 
+  const activeTermId = await getActiveTermId();
   const teacher = await prisma.teacher.findUnique({
     where: { userId: (session.user as any).id },
     include: {
       subjects: {
         include: {
-          _count: { select: { enrollments: true } },
+          // Count only this term's enrollments.
+          _count: { select: { enrollments: { where: { termId: activeTermId } } } },
         },
       },
     },

@@ -4,7 +4,7 @@
 
 **A robust, teacher-led attendance monitoring solution built for modern schools.**
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
@@ -65,7 +65,7 @@ pnpm docs:preview  # preview the production build
 
 | Layer | Technology |
 |---|---|
-| **Framework** | [Next.js 15+](https://nextjs.org/) (App Router) |
+| **Framework** | [Next.js 16+](https://nextjs.org/) (App Router) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) (Strict Mode) |
 | **Database** | [PostgreSQL](https://www.postgresql.org/) via [Prisma ORM](https://www.prisma.io/) |
 | **Authentication** | [NextAuth.js v4](https://next-auth.js.org/) (Credentials Provider + JWT) |

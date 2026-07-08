@@ -2,37 +2,18 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/src/lib/prisma";
+import { isRateLimited, recordAttempt, clearAttempts } from "@/src/lib/rate-limit";
 
 // ---------------------------------------------------------------------------
-// In-memory rate limiter — max 10 failed attempts per IP per 15 minutes
+// Login rate limiting — max 10 failed attempts per identifier per 15 minutes.
+// Backed by the durable `RateLimit` table (see lib/rate-limit.ts) so it holds
+// across serverless instances instead of resetting on every cold start.
 // ---------------------------------------------------------------------------
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 function getRateLimitKey(email: string): string {
-  return email.toLowerCase().trim();
-}
-
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const entry = loginAttempts.get(key);
-  if (!entry || now > entry.resetAt) return false;
-  return entry.count >= MAX_ATTEMPTS;
-}
-
-function recordFailedAttempt(key: string): void {
-  const now = Date.now();
-  const entry = loginAttempts.get(key);
-  if (!entry || now > entry.resetAt) {
-    loginAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
-  } else {
-    entry.count++;
-  }
-}
-
-function clearAttempts(key: string): void {
-  loginAttempts.delete(key);
+  return `login:${email.toLowerCase().trim()}`;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -56,7 +37,7 @@ export const authOptions: NextAuthOptions = {
 
         const identifier = credentials.email.trim();
         const key = getRateLimitKey(identifier);
-        if (isRateLimited(key)) {
+        if (await isRateLimited(key, MAX_ATTEMPTS)) {
           throw new Error("Too many failed login attempts. Please wait 15 minutes.");
         }
 
@@ -70,7 +51,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          recordFailedAttempt(key);
+          await recordAttempt(key, WINDOW_MS);
           return null;
         }
 
@@ -78,16 +59,17 @@ export const authOptions: NextAuthOptions = {
         const isValid = bcrypt.compareSync(credentials.password, user.password);
 
         if (isValid) {
-          clearAttempts(key);
+          await clearAttempts(key);
           return {
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
-          };
+            mustChangePassword: user.mustChangePassword,
+          } as any;
         }
 
-        recordFailedAttempt(key);
+        await recordAttempt(key, WINDOW_MS);
         return null;
       },
     }),
@@ -97,18 +79,21 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        (token as any).mustChangePassword = (user as any).mustChangePassword ?? false;
       }
-      // Re-validate role from DB on session refresh to catch removed/role-changed users
+      // Re-validate from DB on session refresh to catch removed/role-changed users
+      // and to pick up a cleared mustChangePassword flag immediately after change.
       if (!user && token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { id: true, role: true },
+          select: { id: true, role: true, mustChangePassword: true },
         });
         if (!dbUser) {
           // User was deleted — invalidate token
           return { ...token, invalidated: true };
         }
         token.role = dbUser.role;
+        (token as any).mustChangePassword = dbUser.mustChangePassword;
       }
       return token;
     },
@@ -117,6 +102,7 @@ export const authOptions: NextAuthOptions = {
       if (session?.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).mustChangePassword = (token as any).mustChangePassword ?? false;
       }
       return session;
     },

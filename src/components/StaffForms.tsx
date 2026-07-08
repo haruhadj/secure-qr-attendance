@@ -8,7 +8,7 @@ import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
 import { UserPlus, Trash2, Loader2, X, KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ShieldAlert } from "lucide-react";
-import { UserRole } from "@prisma/client";
+import type { UserRole } from "@prisma/client";
 
 export function AddStaffForm() {
   const [open, setOpen] = useState(false);
@@ -16,7 +16,7 @@ export function AddStaffForm() {
   const [form, setForm] = useState<{ name: string; email: string; role: UserRole }>({
     name: "",
     email: "",
-    role: UserRole.TEACHER,
+    role: "TEACHER" as UserRole,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +26,7 @@ export function AddStaffForm() {
       const result = await addStaff(form.name, form.email, form.role);
       if (result.success) {
         toast.success(result.message);
-        setForm({ name: "", email: "", role: UserRole.TEACHER });
+        setForm({ name: "", email: "", role: "TEACHER" as UserRole });
         setOpen(false);
       } else {
         toast.error(result.message);
@@ -89,8 +89,8 @@ export function AddStaffForm() {
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as UserRole }))}
               required
             >
-              <option value={UserRole.TEACHER}>Teacher</option>
-              <option value={UserRole.ADMIN}>Administrator</option>
+              <option value="TEACHER">Teacher</option>
+              <option value="ADMIN">Administrator</option>
             </select>
           </div>
           <div className="md:col-span-3">

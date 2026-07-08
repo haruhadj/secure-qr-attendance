@@ -10,6 +10,7 @@ import { logActivity } from "@/src/lib/audit";
 import type { ParsedSection, ParsedMasterlist } from "@/src/lib/csvParser";
 import { getUTCMidnight } from "@/src/lib/date";
 import { resolveUsername, generateUniqueUsername, normalizeEmail } from "@/src/lib/username";
+import { getActiveTermId } from "@/src/lib/term";
 
 export async function getMasterlist() {
   const session = await getServerSession(authOptions);
@@ -17,11 +18,12 @@ export async function getMasterlist() {
     throw new Error("Unauthorized");
   }
 
+  const activeTermId = await getActiveTermId();
   const students = await prisma.student.findMany({
     include: {
       user: true,
       section: true,
-      enrolledSubjects: { include: { subject: true } },
+      enrolledSubjects: { where: { termId: activeTermId }, include: { subject: true } },
     },
     orderBy: { studentId: "asc" },
   });
@@ -37,7 +39,7 @@ export async function getMasterlist() {
   const subjects = await prisma.subject.findMany({
     include: {
       teacher: { include: { user: true } },
-      _count: { select: { enrollments: true } },
+      _count: { select: { enrollments: { where: { termId: activeTermId } } } },
     },
     orderBy: { code: "asc" },
   });
@@ -63,11 +65,12 @@ export async function getSectionMasterlist(sectionId: string, date?: Date) {
 
   if (!section) throw new Error("Section not found");
 
+  const activeTermId = await getActiveTermId();
   const students = await prisma.student.findMany({
     where: { sectionId },
     include: {
       user: true,
-      enrolledSubjects: { include: { subject: { include: { teacher: { include: { user: true } } } } } },
+      enrolledSubjects: { where: { termId: activeTermId }, include: { subject: { include: { teacher: { include: { user: true } } } } } },
     },
     orderBy: { studentId: "asc" },
   });
@@ -93,9 +96,10 @@ export async function getSubjectMasterlist(subjectId: string, date?: Date) {
 
   const selectedDate = getUTCMidnight(date || new Date());
   const nextDay = new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
+  const activeTermId = await getActiveTermId();
 
   const enrollments = await prisma.studentSubject.findMany({
-    where: { subjectId },
+    where: { subjectId, termId: activeTermId },
     include: {
       student: {
         include: {
@@ -170,6 +174,7 @@ export async function addStudent(data: {
         username,
         password: hashedPassword,
         role: UserRole.STUDENT,
+        mustChangePassword: true, // password is the Student ID — force a change
       },
     });
 
@@ -385,6 +390,11 @@ export async function adminUpdateAttendance(
     updatedAt.setUTCHours(hours, minutes, 0, 0);
   }
 
+  const prior = await prisma.attendance.findUnique({
+    where: { studentId_date_subjectId: { studentId, date: targetDate, subjectId } },
+    select: { status: true },
+  });
+
   const attendance = await prisma.attendance.upsert({
     where: {
       studentId_date_subjectId: { studentId, date: targetDate, subjectId },
@@ -399,6 +409,17 @@ export async function adminUpdateAttendance(
       subjectId,
       status,
       ...(updatedAt ? { updatedAt } : {}),
+    },
+  });
+
+  // Keep the attendance-specific audit trail complete for admin edits too.
+  await prisma.attendanceAudit.create({
+    data: {
+      attendanceId: attendance.id,
+      changedBy: (session.user as any).id,
+      oldStatus: prior?.status ?? null,
+      newStatus: status,
+      reason: "Admin edit",
     },
   });
 
@@ -434,6 +455,17 @@ export async function deleteAttendance(studentId: string, subjectId: string, dat
     where: { studentId_date_subjectId: { studentId, date: targetDate, subjectId } },
   });
 
+  // Record the clear in the attendance audit trail (newStatus null == cleared).
+  await prisma.attendanceAudit.create({
+    data: {
+      attendanceId: existing.id,
+      changedBy: (session.user as any).id,
+      oldStatus: existing.status,
+      newStatus: null,
+      reason: "Admin cleared record",
+    },
+  });
+
   await logActivity("ATTENDANCE_DELETE", `Admin deleted attendance for student ${studentId}`, {
     studentId,
     subjectId,
@@ -458,8 +490,8 @@ export async function resetStudentPasswordToTemp(studentDbId: string, tempPasswo
 
   if (!student) return { success: false, message: "Student not found." };
 
-  if (!tempPassword || tempPassword.length < 6) {
-    return { success: false, message: "Temporary password is too short." };
+  if (!tempPassword || tempPassword.length < 8) {
+    return { success: false, message: "Temporary password must be at least 8 characters." };
   }
 
   const bcrypt = require("bcryptjs");
@@ -467,7 +499,7 @@ export async function resetStudentPasswordToTemp(studentDbId: string, tempPasswo
 
   await prisma.user.update({
     where: { id: student.userId },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, mustChangePassword: true },
   });
 
   await logActivity("STUDENT_PASSWORD_RESET", `Admin set temporary password for student ${student.user.name}`, {
@@ -536,8 +568,9 @@ export async function getAttendanceRange(subjectId: string, from: Date, to: Date
     include: { teacher: { include: { user: true } } },
   });
 
+  const activeTermId = await getActiveTermId();
   const enrollments = await prisma.studentSubject.findMany({
-    where: { subjectId },
+    where: { subjectId, termId: activeTermId },
     include: {
       student: {
         include: {
@@ -637,12 +670,13 @@ export async function enrollStudentInSubject(studentDbId: string, subjectId: str
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) throw new Error("Unauthorized");
 
-  const existing = await prisma.studentSubject.findUnique({
-    where: { studentId_subjectId: { studentId: studentDbId, subjectId } },
+  const termId = await getActiveTermId();
+  const existing = await prisma.studentSubject.findFirst({
+    where: { studentId: studentDbId, subjectId, termId },
   });
   if (existing) return { success: false, message: "Student is already enrolled in this subject." };
 
-  await prisma.studentSubject.create({ data: { studentId: studentDbId, subjectId } });
+  await prisma.studentSubject.create({ data: { studentId: studentDbId, subjectId, termId } });
   revalidatePath("/admin/masterlist");
   return { success: true, message: "Student enrolled in subject." };
 }
@@ -651,8 +685,9 @@ export async function unenrollStudentFromSubject(studentDbId: string, subjectId:
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).role !== UserRole.ADMIN) throw new Error("Unauthorized");
 
+  const termId = await getActiveTermId();
   await prisma.studentSubject.deleteMany({
-    where: { studentId: studentDbId, subjectId },
+    where: { studentId: studentDbId, subjectId, termId },
   });
   revalidatePath("/admin/masterlist");
   return { success: true, message: "Student unenrolled from subject." };
@@ -682,6 +717,7 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
   }
 
   const bcrypt = require("bcryptjs");
+  const activeTermId = await getActiveTermId();
 
   // Pre-compute all password hashes BEFORE the transaction
   // bcrypt.hashSync is slow (~100ms each) and would exhaust the default 5s transaction timeout
@@ -798,31 +834,37 @@ export async function importMasterlist(parsed: ParsedMasterlist): Promise<Import
             // sign in even when the sheet only had a name and section.
             const username = await generateUniqueUsername(prisma, studentData.studentName);
 
-            const newUser = await prisma.user.create({
-              data: {
-                name: studentData.studentName,
-                email: studentEmail,
-                username,
-                password: studentPasswordMap.get(studentData.studentId) ?? bcrypt.hashSync(studentData.studentId, 10),
-                role: UserRole.STUDENT,
-              },
-            });
-            studentRecord = await prisma.student.create({
-              data: { studentId: studentData.studentId, qrToken: crypto.randomUUID(), userId: newUser.id, sectionId: sectionRecord?.id ?? null, yearLevel: studentData.yearLevel ?? null },
-              include: { user: true },
+            // Create the user + student atomically so a failure can never leave
+            // an orphaned user account without its student record.
+            studentRecord = await prisma.$transaction(async (tx) => {
+              const newUser = await tx.user.create({
+                data: {
+                  name: studentData.studentName,
+                  email: studentEmail,
+                  username,
+                  password: studentPasswordMap.get(studentData.studentId) ?? bcrypt.hashSync(studentData.studentId, 10),
+                  role: UserRole.STUDENT,
+                  // Password is the Student ID — force a change on first login.
+                  mustChangePassword: true,
+                },
+              });
+              return tx.student.create({
+                data: { studentId: studentData.studentId, qrToken: crypto.randomUUID(), userId: newUser.id, sectionId: sectionRecord?.id ?? null, yearLevel: studentData.yearLevel ?? null },
+                include: { user: true },
+              });
             });
             summary.studentsCreated++;
           }
 
-          // Enroll in subjects
+          // Enroll in subjects for the active term
           for (const subjectCode of studentData.subjectCodes) {
             const subject = await prisma.subject.findUnique({ where: { code: subjectCode } });
             if (!subject) continue;
-            const alreadyEnrolled = await prisma.studentSubject.findUnique({
-              where: { studentId_subjectId: { studentId: studentRecord.id, subjectId: subject.id } },
+            const alreadyEnrolled = await prisma.studentSubject.findFirst({
+              where: { studentId: studentRecord.id, subjectId: subject.id, termId: activeTermId },
             });
             if (!alreadyEnrolled) {
-              await prisma.studentSubject.create({ data: { studentId: studentRecord.id, subjectId: subject.id } });
+              await prisma.studentSubject.create({ data: { studentId: studentRecord.id, subjectId: subject.id, termId: activeTermId } });
               summary.enrollmentsCreated++;
             }
           }
@@ -945,6 +987,7 @@ export async function bulkSetStudentsSubject(ids: string[], subjectId: string, e
     return { success: false, message: "Subject not found.", ok: 0, failed: [] };
   }
 
+  const termId = await getActiveTermId();
   let ok = 0;
   const failed: BulkResult["failed"] = [];
 
@@ -952,12 +995,12 @@ export async function bulkSetStudentsSubject(ids: string[], subjectId: string, e
     try {
       if (enroll) {
         await prisma.studentSubject.upsert({
-          where: { studentId_subjectId: { studentId: id, subjectId } },
+          where: { studentId_subjectId_termId: { studentId: id, subjectId, termId } },
           update: {},
-          create: { studentId: id, subjectId },
+          create: { studentId: id, subjectId, termId },
         });
       } else {
-        await prisma.studentSubject.deleteMany({ where: { studentId: id, subjectId } });
+        await prisma.studentSubject.deleteMany({ where: { studentId: id, subjectId, termId } });
       }
       ok++;
     } catch (err: any) {
@@ -992,7 +1035,7 @@ export async function bulkResetStudentPasswords(ids: string[]): Promise<BulkResu
     try {
       // Reset to the student's default password (their Student ID).
       const hashed = bcrypt.hashSync(student.studentId, 10);
-      await prisma.user.update({ where: { id: student.userId }, data: { password: hashed } });
+      await prisma.user.update({ where: { id: student.userId }, data: { password: hashed, mustChangePassword: true } });
       ok++;
     } catch (err: any) {
       failed.push({ id, name: student.user.name || student.studentId, message: err?.message || "Reset failed." });
@@ -1018,17 +1061,19 @@ export async function updateStudentEnrollments(studentDbId: string, subjectIds: 
   const student = await prisma.student.findUnique({ where: { id: studentDbId } });
   if (!student) return { success: false, message: "Student not found." };
 
-  // Delete enrollments not in new list
+  const termId = await getActiveTermId();
+
+  // Delete this term's enrollments not in the new list (past terms untouched)
   await prisma.studentSubject.deleteMany({
-    where: { studentId: studentDbId, subjectId: { notIn: subjectIds } },
+    where: { studentId: studentDbId, termId, subjectId: { notIn: subjectIds } },
   });
 
-  // Create missing enrollments
+  // Create missing enrollments for the active term
   for (const subjectId of subjectIds) {
     await prisma.studentSubject.upsert({
-      where: { studentId_subjectId: { studentId: studentDbId, subjectId } },
+      where: { studentId_subjectId_termId: { studentId: studentDbId, subjectId, termId } },
       update: {},
-      create: { studentId: studentDbId, subjectId },
+      create: { studentId: studentDbId, subjectId, termId },
     });
   }
 

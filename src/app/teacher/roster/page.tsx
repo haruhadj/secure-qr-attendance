@@ -9,6 +9,7 @@ import { Users, User, BookOpen, Calendar } from "lucide-react";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
+import { getActiveTermId } from "@/src/lib/term";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
 import ChangeEmailForm from "@/src/components/ChangeEmailForm";
@@ -48,9 +49,10 @@ export default async function TeacherRoster({
     : teacher.subjects[0];
 
   const nextDay = new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
+  const activeTermId = await getActiveTermId();
 
   const enrollments = await prisma.studentSubject.findMany({
-    where: { subjectId: subject.id },
+    where: { subjectId: subject.id, termId: activeTermId },
     include: {
       student: {
         include: {

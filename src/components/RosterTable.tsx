@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { AttendanceStatus } from "@prisma/client";
+import type { AttendanceStatus } from "@prisma/client";
 import { formatTime } from "@/src/lib/date";
 import { updateAttendance } from "@/src/app/actions/attendance";
 import { toast } from "sonner";

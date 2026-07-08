@@ -27,6 +27,16 @@ function formatColDate(date: Date): string {
   return `${m}/${d}/${y}`;
 }
 
+// Neutralize CSV formula injection: a cell starting with = + - @ (or tab/CR) is
+// executed as a formula by Excel/Sheets. Prefix such values with a single quote
+// so a student named `=HYPERLINK(...)` can't become a live formula, then quote
+// and escape embedded double-quotes.
+function csvCell(value: unknown): string {
+  let s = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
 export default function ExportCsvButton({ subjectId, subjectName }: { subjectId: string; subjectName: string }) {
   const now = new Date();
   const firstOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
@@ -80,7 +90,7 @@ export default function ExportCsvButton({ subjectId, subjectName }: { subjectId:
       });
 
       const csvContent = [headers, ...rows]
-        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .map((row) => row.map(csvCell).join(","))
         .join("\n");
 
       // Prefix a UTF-8 BOM so Excel decodes accents/special characters correctly

@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { isSetupRequired } from "@/src/app/actions/setup";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { Button } from "@/src/components/ui/button";
@@ -34,6 +35,15 @@ export default function Home() {
   const [passwordError, setPasswordError] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  // First-run: if no administrator exists yet, send the visitor to setup.
+  useEffect(() => {
+    if (status !== "authenticated") {
+      isSetupRequired()
+        .then((needed) => { if (needed) router.replace("/setup"); })
+        .catch(() => {});
+    }
+  }, [status, router]);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {

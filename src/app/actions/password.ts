@@ -6,8 +6,14 @@ import { authOptions } from "@/src/lib/auth";
 import crypto from "crypto";
 import { sendPasswordResetEmail } from "@/src/lib/email";
 import { normalizeUsername, normalizeEmail } from "@/src/lib/username";
+import { isRateLimited, recordAttempt } from "@/src/lib/rate-limit";
 
 const RESET_TOKEN_EXPIRY_MINUTES = 30;
+
+// Password-reset throttle: max 5 requests per email per hour. Prevents
+// email-bombing a user and exhausting the Resend quota.
+const RESET_MAX = 5;
+const RESET_WINDOW_MS = 60 * 60 * 1000;
 
 export async function changeOwnPassword(currentPassword: string, newPassword: string) {
   const session = await getServerSession(authOptions);
@@ -25,8 +31,15 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
     return { success: false, message: "New password must be at least 8 characters." };
   }
 
+  if (bcrypt.compareSync(newPassword, user.password)) {
+    return { success: false, message: "New password must be different from your current one." };
+  }
+
   const hashedPassword = bcrypt.hashSync(newPassword, 10);
-  await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword, mustChangePassword: false },
+  });
 
   return { success: true, message: "Password changed successfully." };
 }
@@ -85,11 +98,20 @@ export async function changeOwnEmail(newEmail: string) {
 
 export async function requestPasswordReset(rawEmail: string) {
   const email = normalizeEmail(rawEmail);
-  const user = email ? await prisma.user.findUnique({ where: { email } }) : null;
 
-  if (!user || !email) {
-    return { success: true, message: "If that email exists, a reset link has been sent." };
-  }
+  // Generic, enumeration-safe response reused for every early return.
+  const generic = { success: true as const, message: "If that email exists, a reset link has been sent." };
+
+  if (!email) return generic;
+
+  // Throttle per email. Return the generic message when limited so the endpoint
+  // never reveals whether the address exists.
+  const rlKey = `pwreset:${email}`;
+  if (await isRateLimited(rlKey, RESET_MAX)) return generic;
+  await recordAttempt(rlKey, RESET_WINDOW_MS);
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return generic;
 
   const token = crypto.randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + RESET_TOKEN_EXPIRY_MINUTES * 60 * 1000);
@@ -132,7 +154,10 @@ export async function consumePasswordReset(token: string, newPassword: string) {
   const bcrypt = require("bcryptjs");
   const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
-  await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashedPassword, mustChangePassword: false },
+  });
   await prisma.verificationToken.delete({ where: { token } });
 
   return { success: true, message: "Password reset successfully. You can now sign in." };
