@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { BookOpen } from "lucide-react";
+import { formatSchedule } from "@/src/lib/schedule";
 
 interface Subject {
   id: string;
@@ -39,7 +40,7 @@ export default function SubjectSelector({
         {subjects.map((sub) => (
           <option key={sub.id} value={sub.id}>
             {sub.code} — {sub.name}
-            {sub.scheduleDay ? ` (${sub.scheduleDay}${sub.scheduleTime ? " " + sub.scheduleTime : ""})` : ""}
+            {formatSchedule(sub.scheduleDay, sub.scheduleTime) ? ` (${formatSchedule(sub.scheduleDay, sub.scheduleTime)})` : ""}
           </option>
         ))}
       </select>

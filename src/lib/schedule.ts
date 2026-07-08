@@ -78,6 +78,119 @@ export function parseStartMinutes(scheduleTime?: string | null): number | null {
   return h * 60 + min;
 }
 
+// ---------------------------------------------------------------------------
+// Per-day schedule times. A subject may set a different time on each day, e.g.
+// Mon 08:00-09:30 but Wed 13:00-14:30. This is encoded in the existing
+// `scheduleTime` column as `Mon=08:00-09:30;Wed=13:00-14:30` (day label =
+// time, segments joined by ";"). A plain time with no "=" (e.g. "08:00-09:30")
+// is the legacy uniform form and applies to every scheduled day — so old data
+// keeps working unchanged.
+// ---------------------------------------------------------------------------
+
+/** Day-of-week number (0=Sun..6=Sat) → canonical 3-letter label. */
+const DOW_TO_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** Storage/display order — weekdays first, Sunday last. */
+const LABEL_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Normalize any day token ("monday", "M", "Wed") to its canonical label, or null. */
+function canonLabel(dayToken: string): string | null {
+  const key = dayToken.trim().toLowerCase();
+  if (key in DAY_ALIASES) return DOW_TO_LABEL[DAY_ALIASES[key]];
+  // Compact single/double-letter codes (a lone "M", "Th", …).
+  const compact = COMPACT_ORDER.find(([code]) => code.toLowerCase() === key);
+  return compact ? DOW_TO_LABEL[compact[1]] : null;
+}
+
+/**
+ * Parse a per-day time encoding into a { label: time } map, or null when the
+ * value is a legacy uniform time (no "=").
+ */
+export function parsePerDayTimes(scheduleTime?: string | null): Record<string, string> | null {
+  if (!scheduleTime || !scheduleTime.includes("=")) return null;
+  const out: Record<string, string> = {};
+  for (const seg of scheduleTime.split(";")) {
+    const eq = seg.indexOf("=");
+    if (eq === -1) continue;
+    const label = canonLabel(seg.slice(0, eq));
+    const time = seg.slice(eq + 1).trim();
+    if (label && time) out[label] = time;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** Start minutes for a specific day-of-week, honoring per-day times. */
+export function startMinutesForDay(scheduleTime: string | null | undefined, dow: number): number | null {
+  const perDay = parsePerDayTimes(scheduleTime);
+  if (perDay) {
+    const label = DOW_TO_LABEL[dow];
+    return label in perDay ? parseStartMinutes(perDay[label]) : null;
+  }
+  return parseStartMinutes(scheduleTime);
+}
+
+/** Human-friendly one-line schedule, e.g. "Mon 08:00-09:30 · Wed 13:00-14:30" or "Mon,Wed,Fri · 08:00-09:30". */
+export function formatSchedule(scheduleDay?: string | null, scheduleTime?: string | null): string {
+  const perDay = parsePerDayTimes(scheduleTime);
+  if (perDay) {
+    return LABEL_ORDER.filter((l) => l in perDay).map((l) => `${l} ${perDay[l]}`).join(" · ");
+  }
+  const day = (scheduleDay ?? "").trim();
+  const time = (scheduleTime ?? "").trim();
+  if (day && time) return `${day} · ${time}`;
+  return day || time || "";
+}
+
+/** Split stored scheduleDay/scheduleTime into the editor's { days, times } shape. */
+export function decodeSchedule(
+  scheduleDay?: string | null,
+  scheduleTime?: string | null
+): { days: string[]; times: Record<string, string> } {
+  const days: string[] = [];
+  for (const tok of (scheduleDay ?? "").split(/[\s,/|&+]+/)) {
+    const label = canonLabel(tok);
+    if (label && !days.includes(label)) days.push(label);
+  }
+  const times: Record<string, string> = {};
+  const perDay = parsePerDayTimes(scheduleTime);
+  if (perDay) {
+    for (const [label, t] of Object.entries(perDay)) {
+      times[label] = t;
+      if (!days.includes(label)) days.push(label);
+    }
+  } else {
+    const uniform = (scheduleTime ?? "").trim();
+    if (uniform) for (const d of days) times[d] = uniform;
+  }
+  days.sort((a, b) => LABEL_ORDER.indexOf(a) - LABEL_ORDER.indexOf(b));
+  return { days, times };
+}
+
+/**
+ * Collapse the editor's { days, times } back into stored columns. When every
+ * selected day shares the same time we store the clean uniform form; otherwise
+ * we store the per-day encoding.
+ */
+export function encodeSchedule(
+  days: string[],
+  times: Record<string, string>
+): { scheduleDay: string | null; scheduleTime: string | null } {
+  const ordered = days
+    .filter((d) => LABEL_ORDER.includes(d))
+    .sort((a, b) => LABEL_ORDER.indexOf(a) - LABEL_ORDER.indexOf(b));
+  const scheduleDay = ordered.length ? ordered.join(",") : null;
+
+  const withTime = ordered.filter((d) => (times[d] ?? "").trim());
+  if (withTime.length === 0) return { scheduleDay, scheduleTime: null };
+
+  const first = (times[ordered[0]] ?? "").trim();
+  const uniform =
+    withTime.length === ordered.length && ordered.every((d) => (times[d] ?? "").trim() === first);
+  if (uniform) return { scheduleDay, scheduleTime: first };
+
+  const scheduleTime = withTime.map((d) => `${d}=${(times[d]).trim()}`).join(";");
+  return { scheduleDay, scheduleTime };
+}
+
 export interface ScanDecision {
   status: AttendanceStatus;
   /** true when the schedule was known and the scan fell after the grace window. */
@@ -100,7 +213,7 @@ export function decideScanStatus(
   const days = parseScheduleDays(subject.scheduleDay);
   const offSchedule = days.size > 0 && !days.has(dow);
 
-  const start = parseStartMinutes(subject.scheduleTime);
+  const start = startMinutesForDay(subject.scheduleTime, dow);
   if (start === null) {
     return { status: "PRESENT", late: false, offSchedule };
   }

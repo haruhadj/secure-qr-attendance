@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src
 import { toast } from "sonner";
 import { UserPlus, Trash2, Loader2, FolderPlus, X, Edit2, QrCode, Clock, RefreshCw, KeyRound, ClipboardEdit, Copy, Check, Eye, EyeOff, ShieldAlert, BookOpen, BookMarked } from "lucide-react";
 import { formatDate } from "@/src/lib/date";
+import { encodeSchedule, decodeSchedule } from "@/src/lib/schedule";
 import { deriveUsername } from "@/src/lib/username";
 import { QRCodeSVG } from "qrcode.react";
 import { QrDownloadButton } from "@/src/components/QrDownloadButton";
@@ -982,35 +983,95 @@ export function ViewQrModal({
   );
 }
 
+const SCHEDULE_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * Day picker with an independent time field per selected day. Controlled via
+ * `days` + `times`; encode/decode to the stored columns lives in lib/schedule.
+ */
+function ScheduleEditor({
+  days,
+  times,
+  onChange,
+}: {
+  days: string[];
+  times: Record<string, string>;
+  onChange: (days: string[], times: Record<string, string>) => void;
+}) {
+  const toggleDay = (day: string) => {
+    if (days.includes(day)) {
+      const nextTimes = { ...times };
+      delete nextTimes[day];
+      onChange(days.filter((d) => d !== day), nextTimes);
+    } else {
+      // Convenience: seed a newly checked day with a time already entered elsewhere.
+      const seed = days.map((d) => times[d]).find((t) => t && t.trim()) || "";
+      onChange([...days, day], seed ? { ...times, [day]: seed } : times);
+    }
+  };
+  const setTime = (day: string, val: string) => onChange(days, { ...times, [day]: val });
+  const ordered = SCHEDULE_DAYS.filter((d) => days.includes(d));
+
+  return (
+    <div className="space-y-2">
+      <Label>Schedule Days &amp; Times</Label>
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-input bg-background px-3 py-2">
+        {SCHEDULE_DAYS.map((day) => (
+          <label key={day} className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
+            <input type="checkbox" checked={days.includes(day)} onChange={() => toggleDay(day)} className="accent-primary" />
+            {day}
+          </label>
+        ))}
+      </div>
+      {ordered.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          {ordered.map((day) => (
+            <div key={day} className="flex items-center gap-2">
+              <span className="w-10 shrink-0 text-sm font-medium text-muted-foreground">{day}</span>
+              <Input
+                value={times[day] ?? ""}
+                onChange={(e) => setTime(day, e.target.value)}
+                placeholder="08:00-09:30"
+                className="h-9"
+              />
+            </div>
+          ))}
+          <p className="text-[11px] text-muted-foreground">
+            Each day keeps its own time. Leave a day blank if it has no fixed start time.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AddSubjectForm({ teachers }: { teachers: { id: string; user: { name: string | null } }[] }) {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [units, setUnits] = useState("");
-  const [scheduleDays, setScheduleDays] = useState<string[]>([]);
-  const [scheduleTime, setScheduleTime] = useState("");
+  const [days, setDays] = useState<string[]>([]);
+  const [times, setTimes] = useState<Record<string, string>>({});
   const [teacherId, setTeacherId] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const toggleDay = (day: string) =>
-    setScheduleDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim() || !name.trim()) { toast.error("Subject code and name are required."); return; }
     setLoading(true);
     try {
+      const { scheduleDay, scheduleTime } = encodeSchedule(days, times);
       const result = await addSubject({
         code: code.trim(),
         name: name.trim(),
         units: units ? parseInt(units) : undefined,
-        scheduleDay: scheduleDays.length > 0 ? scheduleDays.join(",") : undefined,
-        scheduleTime: scheduleTime || undefined,
+        scheduleDay: scheduleDay ?? undefined,
+        scheduleTime: scheduleTime ?? undefined,
         teacherId: teacherId || undefined,
       });
       if (result.success) {
         toast.success(result.message);
-        setOpen(false); setCode(""); setName(""); setUnits(""); setScheduleDays([]); setScheduleTime(""); setTeacherId("");
+        setOpen(false); setCode(""); setName(""); setUnits(""); setDays([]); setTimes({}); setTeacherId("");
       } else {
         toast.error(result.message);
       }
@@ -1052,23 +1113,7 @@ export function AddSubjectForm({ teachers }: { teachers: { id: string; user: { n
               <Label>Subject Name *</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Operating Systems" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1 col-span-2">
-                <Label>Schedule Day</Label>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-input bg-background px-3 py-2">
-                  {["Mon","Tue","Wed","Thu","Fri","Sat"].map((day) => (
-                    <label key={day} className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
-                      <input type="checkbox" checked={scheduleDays.includes(day)} onChange={() => toggleDay(day)} className="accent-primary" />
-                      {day}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Schedule Time</Label>
-                <Input value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} placeholder="08:00-09:30" />
-              </div>
-            </div>
+            <ScheduleEditor days={days} times={times} onChange={(d, t) => { setDays(d); setTimes(t); }} />
             <div className="space-y-1">
               <Label>Assigned Teacher</Label>
               <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
@@ -1101,26 +1146,23 @@ export function EditSubjectModal({
   const [code, setCode] = useState(subject.code);
   const [name, setName] = useState(subject.name);
   const [units, setUnits] = useState(subject.units ? String(subject.units) : "");
-  const [scheduleDays, setScheduleDays] = useState<string[]>(
-    subject.scheduleDay ? subject.scheduleDay.split(",").map((d) => d.trim()).filter(Boolean) : []
-  );
-  const [scheduleTime, setScheduleTime] = useState(subject.scheduleTime || "");
+  const initialSchedule = decodeSchedule(subject.scheduleDay, subject.scheduleTime);
+  const [days, setDays] = useState<string[]>(initialSchedule.days);
+  const [times, setTimes] = useState<Record<string, string>>(initialSchedule.times);
   const [teacherId, setTeacherId] = useState(subject.teacherId || "");
   const [loading, setLoading] = useState(false);
-
-  const toggleDay = (day: string) =>
-    setScheduleDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const { scheduleDay, scheduleTime } = encodeSchedule(days, times);
       const result = await updateSubject(subject.id, {
         code: code.trim() || undefined,
         name: name.trim() || undefined,
         units: units ? parseInt(units) : null,
-        scheduleDay: scheduleDays.length > 0 ? scheduleDays.join(",") : null,
-        scheduleTime: scheduleTime || null,
+        scheduleDay,
+        scheduleTime,
         teacherId: teacherId || null,
       });
       if (result.success) { toast.success(result.message); setOpen(false); }
@@ -1162,23 +1204,7 @@ export function EditSubjectModal({
               <Label>Subject Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1 col-span-2">
-                <Label>Schedule Day</Label>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-input bg-background px-3 py-2">
-                  {["Mon","Tue","Wed","Thu","Fri","Sat"].map((day) => (
-                    <label key={day} className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
-                      <input type="checkbox" checked={scheduleDays.includes(day)} onChange={() => toggleDay(day)} className="accent-primary" />
-                      {day}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Schedule Time</Label>
-                <Input value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} />
-              </div>
-            </div>
+            <ScheduleEditor days={days} times={times} onChange={(d, t) => { setDays(d); setTimes(t); }} />
             <div className="space-y-1">
               <Label>Teacher</Label>
               <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">

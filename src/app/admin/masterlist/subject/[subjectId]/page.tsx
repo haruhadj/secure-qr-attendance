@@ -17,6 +17,7 @@ import {
   ManageStudentSubjectsModal,
 } from "@/src/components/MasterlistForms";
 import { BookOpen, GraduationCap, ChevronLeft, Calendar, Clock } from "lucide-react";
+import { formatSchedule } from "@/src/lib/schedule";
 import Link from "next/link";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
@@ -72,12 +73,12 @@ export default async function SubjectMasterlist({
             </h1>
             <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span>Teacher: <span className="font-medium text-foreground">{subject.teacher?.user?.name || "Unassigned"}</span></span>
-              {subject.scheduleDay && (
+              {formatSchedule(subject.scheduleDay, subject.scheduleTime) && (
                 <>
                   <span className="text-muted-foreground/30">•</span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    {subject.scheduleDay}{subject.scheduleTime ? ` · ${subject.scheduleTime}` : ""}
+                    {formatSchedule(subject.scheduleDay, subject.scheduleTime)}
                   </span>
                 </>
               )}

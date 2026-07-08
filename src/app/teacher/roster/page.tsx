@@ -9,6 +9,7 @@ import { Users, User, BookOpen, Calendar } from "lucide-react";
 import DatePicker from "@/src/components/DatePicker";
 import WeeklyStrip from "@/src/components/WeeklyStrip";
 import { getUTCMidnight, parseUTCDate } from "@/src/lib/date";
+import { formatSchedule } from "@/src/lib/schedule";
 import { getActiveTermId } from "@/src/lib/term";
 import { AutoRefresh } from "@/src/components/AutoRefresh";
 import ChangePasswordForm from "@/src/components/ChangePasswordForm";
@@ -115,8 +116,8 @@ export default async function TeacherRoster({
               <div>
                 <CardTitle>Attendance Monitoring</CardTitle>
                 <CardDescription>
-                  {subject.scheduleDay && subject.scheduleTime
-                    ? `${subject.scheduleDay} · ${subject.scheduleTime} · Manual override enabled.`
+                  {formatSchedule(subject.scheduleDay, subject.scheduleTime)
+                    ? `${formatSchedule(subject.scheduleDay, subject.scheduleTime)} · Manual override enabled.`
                     : "Manual override enabled. Changes sync automatically after 5 seconds."}
                 </CardDescription>
               </div>

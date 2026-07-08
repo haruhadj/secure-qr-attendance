@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
 import { FolderOpen, BookOpen, Search, ChevronRight, Users, Clock } from "lucide-react";
+import { formatSchedule } from "@/src/lib/schedule";
 
 interface Section {
   id: string;
@@ -270,8 +271,8 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                       </span>
                       <div className="md:hidden text-xs font-normal text-muted-foreground mt-0.5 space-y-0.5">
                         <div>{subject.teacher?.user?.name || <span className="text-amber-500">Unassigned</span>}</div>
-                        {subject.scheduleDay && (
-                          <div className="flex items-center gap-1"><Clock className="w-3 h-3" />{subject.scheduleDay}{subject.scheduleTime && ` · ${subject.scheduleTime}`}</div>
+                        {formatSchedule(subject.scheduleDay, subject.scheduleTime) && (
+                          <div className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatSchedule(subject.scheduleDay, subject.scheduleTime)}</div>
                         )}
                       </div>
                     </td>
@@ -281,11 +282,10 @@ export default function MasterlistTabs({ sections, subjects, teachers }: Props) 
                       )}
                     </td>
                     <td className="hidden md:table-cell px-4 py-3 text-muted-foreground">
-                      {subject.scheduleDay ? (
+                      {formatSchedule(subject.scheduleDay, subject.scheduleTime) ? (
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 shrink-0" />
-                          {subject.scheduleDay}
-                          {subject.scheduleTime && ` · ${subject.scheduleTime}`}
+                          {formatSchedule(subject.scheduleDay, subject.scheduleTime)}
                         </span>
                       ) : (
                         <span className="text-muted-foreground/30">—</span>
