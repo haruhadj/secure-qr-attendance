@@ -239,7 +239,8 @@ export async function getSystemSettings() {
   // Provide defaults if they don't exist yet
   const defaultSettings = [
     { key: "attendance_lock_hours", value: "24", description: "Hours before attendance edits are locked for teachers (0 for unlimited)" },
-    { key: "late_grace_minutes", value: "15", description: "Minutes after a class start time before a QR scan is marked LATE instead of PRESENT" },
+    { key: "late_grace_minutes", value: "15", description: "Minutes after a class start time before a QR scan is marked LATE instead of PRESENT. Also used as the auto-absent cutoff for subjects with no end time." },
+    { key: "auto_absent_enabled", value: "true", description: "Automatically mark ABSENT when a student has no attendance record after class ends (true/false)" },
   ];
 
   for (const ds of defaultSettings) {
@@ -262,6 +263,11 @@ export async function updateSystemSetting(key: string, value: string) {
     if (!Number.isInteger(n) || n < 0) {
       return { success: false, message: "Value must be a whole number of zero or more." };
     }
+  }
+
+  // The …_enabled settings are booleans read as `value !== "false"` downstream.
+  if (/_enabled$/.test(key) && value !== "true" && value !== "false") {
+    return { success: false, message: 'Value must be "true" or "false".' };
   }
 
   await prisma.systemSetting.update({
