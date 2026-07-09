@@ -2,10 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   parseScheduleDays,
   parseStartMinutes,
+  parseEndMinutes,
   decideScanStatus,
   manilaNowParts,
   parsePerDayTimes,
   startMinutesForDay,
+  endMinutesForDay,
+  absentCutoffForDay,
   formatSchedule,
   decodeSchedule,
   encodeSchedule,
@@ -47,6 +50,43 @@ describe("parseStartMinutes", () => {
     expect(parseStartMinutes(null)).toBeNull();
     expect(parseStartMinutes("N/A")).toBeNull();
     expect(parseStartMinutes("99:99")).toBeNull();
+  });
+});
+
+describe("parseEndMinutes", () => {
+  it("parses the end of a range", () => {
+    expect(parseEndMinutes("08:00-09:30")).toBe(570);
+    expect(parseEndMinutes("13:00-14:30")).toBe(870);
+  });
+
+  it("returns null when there is no range or the end is invalid", () => {
+    expect(parseEndMinutes("8:05")).toBeNull();
+    expect(parseEndMinutes(null)).toBeNull();
+    expect(parseEndMinutes("08:00-99:99")).toBeNull();
+  });
+});
+
+describe("endMinutesForDay / absentCutoffForDay", () => {
+  it("endMinutesForDay picks the right day, honoring per-day and uniform forms", () => {
+    const perDay = "Mon=08:00-09:30;Wed=13:00-14:30";
+    expect(endMinutesForDay(perDay, 1)).toBe(570); // Mon 09:30
+    expect(endMinutesForDay(perDay, 3)).toBe(870); // Wed 14:30
+    expect(endMinutesForDay(perDay, 5)).toBeNull(); // Fri not scheduled
+    expect(endMinutesForDay("08:00-09:30", 5)).toBe(570); // uniform applies to any day
+  });
+
+  it("absentCutoffForDay prefers the explicit end time", () => {
+    const subject = { scheduleTime: "08:00-09:30" };
+    expect(absentCutoffForDay(subject, 1, 15)).toBe(570); // 09:30, not start+grace
+  });
+
+  it("absentCutoffForDay falls back to start + grace when there is no end time", () => {
+    const subject = { scheduleTime: "08:00" };
+    expect(absentCutoffForDay(subject, 1, 15)).toBe(495); // 08:00 + 15m
+  });
+
+  it("absentCutoffForDay returns null with no usable start time", () => {
+    expect(absentCutoffForDay({ scheduleTime: null }, 1, 15)).toBeNull();
   });
 });
 

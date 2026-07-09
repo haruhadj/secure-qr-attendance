@@ -78,6 +78,19 @@ export function parseStartMinutes(scheduleTime?: string | null): number | null {
   return h * 60 + min;
 }
 
+/** End time of a schedule ("08:00-09:30") as minutes since midnight, or null if no end is given. */
+export function parseEndMinutes(scheduleTime?: string | null): number | null {
+  if (!scheduleTime) return null;
+  const dash = scheduleTime.indexOf("-");
+  if (dash === -1) return null;
+  const m = scheduleTime.slice(dash + 1).trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (h > 23 || min > 59) return null;
+  return h * 60 + min;
+}
+
 // ---------------------------------------------------------------------------
 // Per-day schedule times. A subject may set a different time on each day, e.g.
 // Mon 08:00-09:30 but Wed 13:00-14:30. This is encoded in the existing
@@ -126,6 +139,37 @@ export function startMinutesForDay(scheduleTime: string | null | undefined, dow:
     return label in perDay ? parseStartMinutes(perDay[label]) : null;
   }
   return parseStartMinutes(scheduleTime);
+}
+
+/** End minutes for a specific day-of-week, honoring per-day times. */
+export function endMinutesForDay(scheduleTime: string | null | undefined, dow: number): number | null {
+  const perDay = parsePerDayTimes(scheduleTime);
+  if (perDay) {
+    const label = DOW_TO_LABEL[dow];
+    return label in perDay ? parseEndMinutes(perDay[label]) : null;
+  }
+  return parseEndMinutes(scheduleTime);
+}
+
+/**
+ * Minute-of-day after which a subject's session on `dow` is over and a
+ * still-missing scan should become ABSENT. Prefers the schedule's explicit
+ * end time ("08:00-09:30" → 09:30); when only a start time is set, falls
+ * back to start + grace minutes (the same cutoff already used to decide
+ * PRESENT vs LATE), so a subject with no end time still gets marked absent
+ * a reasonable while after class starts. Returns null when the subject has
+ * no usable start time for `dow` (nothing to auto-absent against).
+ */
+export function absentCutoffForDay(
+  subject: { scheduleTime?: string | null },
+  dow: number,
+  graceMinutes: number
+): number | null {
+  const end = endMinutesForDay(subject.scheduleTime, dow);
+  if (end !== null) return end;
+  const start = startMinutesForDay(subject.scheduleTime, dow);
+  if (start === null) return null;
+  return start + Math.max(0, graceMinutes);
 }
 
 /** Zero-pad an "H:MM"/"HH:MM" fragment to "HH:MM" for a native time input, or "" if unparseable. */

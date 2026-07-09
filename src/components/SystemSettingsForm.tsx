@@ -45,11 +45,27 @@ export default function SystemSettingsForm({ settings }: { settings: Setting[] }
               {setting.key.replace(/_/g, " ")}
             </Label>
             <p className="text-xs text-muted-foreground">{setting.description}</p>
-            <Input
-              value={values[setting.key] || ""}
-              onChange={(e) => setValues({ ...values, [setting.key]: e.target.value })}
-              className="bg-muted/50"
-            />
+            {setting.key.endsWith("_enabled") ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setValues({
+                    ...values,
+                    [setting.key]: values[setting.key] === "true" ? "false" : "true",
+                  })
+                }
+                className="bg-muted/50"
+              >
+                {values[setting.key] === "true" ? "Enabled" : "Disabled"}
+              </Button>
+            ) : (
+              <Input
+                value={values[setting.key] || ""}
+                onChange={(e) => setValues({ ...values, [setting.key]: e.target.value })}
+                className="bg-muted/50"
+              />
+            )}
           </div>
           <Button 
             onClick={() => handleUpdate(setting.key)} 
