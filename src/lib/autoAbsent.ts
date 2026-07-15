@@ -20,13 +20,13 @@ export interface AutoAbsentResult {
  */
 export async function runAutoAbsentSweep(now: Date = new Date()): Promise<AutoAbsentResult> {
   const enabledSetting = await prisma.systemSetting.findUnique({ where: { key: "auto_absent_enabled" } });
-  const enabled = enabledSetting ? enabledSetting.value !== "false" : true;
+  const enabled = enabledSetting?.value === "true";
   if (!enabled) {
     return { enabled: false, checkedSubjects: 0, markedAbsent: 0 };
   }
 
   const graceSetting = await prisma.systemSetting.findUnique({ where: { key: "late_grace_minutes" } });
-  const graceMinutes = graceSetting ? parseInt(graceSetting.value, 10) : 15;
+  const graceMinutes = graceSetting ? parseInt(graceSetting.value, 10) : 30;
 
   const { dow, minutes } = manilaNowParts(now);
   const today = getUTCMidnight(now);

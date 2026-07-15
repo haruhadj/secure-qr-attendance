@@ -8,7 +8,7 @@
     },
     {
       "path": "/api/cron/mark-absent",
-      "schedule": "0 12 * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -4,7 +4,7 @@ A plain-language checklist for the person who runs the attendance system day to 
 
 ## Everyday
 
-- **Teachers** take attendance by opening **Scanner**, choosing the subject, and scanning each student's QR code. Present/Late is decided automatically from the class start time.
+- **Teachers** take attendance by opening **Scanner**, choosing the subject, and scanning each student's QR code. Scans are Present for the first 30 minutes after class starts, then Late. If an admin enables automatic absences in System Settings, unrecorded active-term students are marked Absent within five minutes after a scheduled class ends.
 - **Students** show their QR code (from their dashboard or a printed ID card) to be scanned.
 - Attendance can always be corrected by hand from the teacher **Roster** or the admin **Masterlist**.
 

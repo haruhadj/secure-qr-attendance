@@ -114,6 +114,11 @@ describe("decideScanStatus", () => {
     expect(d.late).toBe(true);
   });
 
+  it("keeps a scan PRESENT at exactly 30 minutes and marks it LATE after", () => {
+    expect(decideScanStatus(subject, 30, mondayManila("00:30")).status).toBe("PRESENT");
+    expect(decideScanStatus(subject, 30, mondayManila("00:31")).status).toBe("LATE");
+  });
+
   it("defaults to PRESENT when no start time is known", () => {
     const d = decideScanStatus({ scheduleDay: "Mon", scheduleTime: null }, 15, mondayManila("05:00"));
     expect(d.status).toBe("PRESENT");

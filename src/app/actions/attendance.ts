@@ -171,7 +171,7 @@ export async function scanQrAttendance(qrToken: string, subjectId: string) {
   const graceSetting = await prisma.systemSetting.findUnique({
     where: { key: "late_grace_minutes" },
   });
-  const graceMinutes = graceSetting ? parseInt(graceSetting.value, 10) : 15;
+  const graceMinutes = graceSetting ? parseInt(graceSetting.value, 10) : 30;
   const decision = decideScanStatus(subject, graceMinutes);
 
   const oldStatus = existing?.status || null;
