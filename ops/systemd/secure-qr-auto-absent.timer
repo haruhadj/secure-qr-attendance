@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the Secure QR Attendance automatic absence sweep every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=15s
+Persistent=true
+Unit=secure-qr-auto-absent.service
+
+[Install]
+WantedBy=timers.target

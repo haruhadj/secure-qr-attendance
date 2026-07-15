@@ -1,0 +1,16 @@
+[Unit]
+Description=Trigger the Secure QR Attendance automatic absence sweep
+Documentation=https://github.com/haruhadj/secure-qr-attendance
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/secure-qr-attendance/auto-absent.env
+ExecStart=/usr/bin/curl --fail-with-body --silent --show-error --retry 3 --retry-all-errors --retry-delay 10 --connect-timeout 15 --max-time 90 -H "Authorization: Bearer ${CRON_SECRET}" "${APP_URL}/api/cron/mark-absent"
+
+# The service only needs network access and the environment file.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict

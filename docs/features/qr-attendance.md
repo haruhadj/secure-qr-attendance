@@ -84,8 +84,8 @@ toggle by hand:
 - **ABSENT is decided by a scheduled sweep**, since "no scan happened" can't
   be detected by a request handler. `runAutoAbsentSweep()`
   (`src/lib/autoAbsent.ts`) is invoked by the `/api/cron/mark-absent` route
-  (registered in `vercel.json`, protected by `CRON_SECRET` the same way as
-  the backup cron). On each run it finds subjects whose session has ended for
+  (protected by `CRON_SECRET` the same way as the backup cron). On each run it
+  finds subjects whose session has ended for
   today — using the schedule's explicit end time (e.g. the `09:30` in
   `08:00-09:30`), or `start + late_grace_minutes` when no end time is set —
   and creates an `ABSENT` `Attendance` row (with an `AttendanceAudit` row,
@@ -93,15 +93,10 @@ toggle by hand:
   for that subject/date. It never touches a row that already exists, so it's
   safe to run repeatedly and it never overwrites a scan, a manual edit, or an
   appeal. Turn the whole sweep off with the `auto_absent_enabled` system
-  setting. `vercel.json` schedules it for `0 12 * * *` (12:00 UTC / 8:00 PM
-  Manila, once daily) because the Vercel **Hobby** plan only allows daily
-  cron runs — a more frequent schedule fails deployment outright. That
-  means on Hobby, a student who never scans shows as absent only once
-  classes for the day are done, not moments after their own class ends. For
-  same-day, closer-to-real-time marking, either upgrade to a Vercel plan
-  that allows frequent crons and tighten the schedule (e.g. `*/10 * * * *`),
-  or trigger `GET /api/cron/mark-absent` (with the `CRON_SECRET` bearer
-  token) more often from an external scheduler.
+  setting. The Vercel **Hobby** plan only allows daily cron jobs, so the
+  five-minute sweep is intentionally not registered in `vercel.json`; a
+  Raspberry Pi systemd timer calls it instead. See
+  [Raspberry Pi attendance scheduler](/deployment/raspberry-pi-scheduler).
 - **Appeals still work exactly the same way** against auto-marked records: a
   student can appeal an auto-`ABSENT` or auto-`LATE` day like any other, and
   an approved appeal upserts the `Attendance` row to `PRESENT`. See
